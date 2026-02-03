@@ -95,13 +95,13 @@ export const parseAnalysisReport = (markdown: string): AnalysisReport => {
         ]);
         report.metacognitive.opticalScenario = {
             selected: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Selected Scenario/i,
+                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Scenario Choice/i,
             ]),
             reasoning: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Reasoning/i,
-            ], '',), // Reasoning might be duplicate with general diagnosis, but usually distinct in this block
+                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Optical Reasoning/i,
+            ], '',),
             specs: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Applied Specs/i,
+                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Lens Specs/i,
             ]),
         };
 

@@ -1036,9 +1036,9 @@ Specific 지침:
                   * *Abstract:* (User's abstract intent, e.g., "Cozy", "Grand")
                   * *→ Tech Spec:* (Translated physical/optical values)
               * **Optical Scenario Selection (AI Autonomous Decision):**
-                  * **Selected Scenario:** [A / B / C / D]
-                  * **Reasoning:** (Why this lens best fits the sketch's scale/context?)
-                  * **Applied Specs:** [Lens Name] / [Aperture]
+                  * **Scenario Choice:** [A / B / C / D]
+                  * **Optical Reasoning:** (Why this lens best fits the sketch's scale/context?)
+                  * **Lens Specs:** [Lens Name] / [Aperture]
 
               ## 2. Spatial & Logic Decoding (공간 및 논리 해독)
               * **Geometry (Layer 1 Input):** [Main structural lines/forms to preserve]
