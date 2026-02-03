@@ -284,12 +284,12 @@ function App() {
 
           <div className="relative bg-white dark:bg-black flex flex-col min-w-0 h-[30vh] landscape:h-auto landscape:flex-1">
             <div className="w-full h-full relative">
-              {activeTab === 'create' && (
+              <div className={`w-full h-full ${activeTab === 'create' ? 'block' : 'hidden'}`}>
                 <CanvasBoard
                   ref={canvasRef}
                   onImageChange={setHasCanvasContent}
                 />
-              )}
+              </div>
               {activeTab === 'result' && originalImage && generatedImage && (
                 <ResultViewer
                   original={originalImage}
@@ -544,10 +544,10 @@ function App() {
                 ) : (
                   <div className="border border-black dark:border-white">
                     <button
-                      onClick={handleDownload}
+                      onClick={handleEdit}
                       className="w-full py-2 font-display text-lg tracking-widest bg-black text-white dark:bg-white dark:text-black flex items-center justify-center gap-2 hover:opacity-80 transition-opacity"
                     >
-                      <span className="pt-1">DOWNLOAD</span>
+                      <span className="pt-1">EDIT</span>
                     </button>
                   </div>
                 )}
