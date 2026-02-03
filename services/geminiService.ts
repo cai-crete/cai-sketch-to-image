@@ -480,23 +480,6 @@ Specific 지침:
 - Interpret any vertical line in sketch as potential "incision" (light slit).
 - Convert any large flat surface into striped pattern (minimum 2 colors).
 - If sketch shows curved outline → default to cylinder.
-- If sketch shows rectangular outline → default to cube.
-- If sketch shows triangular roof → default to triangular prism.
-- Treat sketch outline as OUTER boundary of geometric solid; incisions are INSIDE this boundary.
-`,
-      E: `
-# CRE-TE STYLE E
-------------------------------------
-# Role & Context
-Act as the AI Architect for **CRE-TE STYLE E** [Silent Minimalism] (침묵의 미니멀리즘).
-"본질적인 물성과 빛의 조각을 통해 고요한 존재감(Quiet Confidence)을 극대화하는 스타일"
-
-* **Design Philosophy:** 장식을 배제하고 기하학적 순수성을 강조. '형태'보다는 빛이 닿는 '면'의 질감에 집중.
-* **Key Reference (Architects):** Peter Zumthor, Tadao Ando, John Pawson.
-
-## PHASE 1: Material Palette (POSI-GAP)
-* **Concrete:** Exposed Aggregate Concrete (노출 콘크리트, 매끄럽지만 차가운 질감).
-* **Stone:** Vals Quartzite (발스 규암, 깊이감 있는 회색조).
 * **Glass:** Frameless Low-Iron Glass (프레임 없는 투명 유리를 통한 경계 소거).
 
 ## PHASE 2: Morphological Strategy
