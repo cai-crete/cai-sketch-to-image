@@ -8,6 +8,7 @@ interface CanvasBoardProps {
 export interface CanvasRef {
   exportImage: () => string | null;
   clear: () => void;
+  loadImage: (src: string) => void;
 }
 
 const COLORS = ['#FFD700', '#000000', '#FF0000', '#0000FF', '#008000', '#FFFFFF'];

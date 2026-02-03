@@ -228,6 +228,16 @@ function App() {
     setLibraryItems(updated);
   };
 
+  const handleEdit = () => {
+    if (generatedImage && canvasRef.current) {
+      canvasRef.current.loadImage(generatedImage);
+      setOriginalImage(generatedImage); // Optional: treat generated result as the new "original"? Or keep original?
+      // Actually per requirement: "generated image as background".
+      // loadImage sets the background layer.
+      setActiveTab('create');
+    }
+  };
+
   return (
     <ApiKeyGuard>
       <div className="h-screen w-full flex flex-col bg-bw-white text-bw-black dark:bg-bw-black dark:text-bw-white transition-colors duration-300">
@@ -284,6 +294,8 @@ function App() {
                 <ResultViewer
                   original={originalImage}
                   generated={generatedImage}
+                  onDownload={handleDownload}
+                  onEdit={handleEdit}
                 />
               )}
             </div>
