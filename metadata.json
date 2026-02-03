@@ -1,0 +1,7 @@
+{
+  "name": "Blueprint Realization Engine",
+  "description": "Transform architectural sketches into hyper-realistic photography using Gemini 3 Pro.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

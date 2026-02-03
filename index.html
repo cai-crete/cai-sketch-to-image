@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sketch to Image</title>
+  <meta name="description" content="AI Drawing App" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Bebas Neue"', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          screens: {
+            'short': { 'raw': '(max-height: 800px)' },
+            'landscape': { 'raw': '(orientation: landscape)' },
+          },
+          colors: {
+            // Strict B&W Palette
+            'bw-white': '#FFFFFF',
+            'bw-black': '#000000',
+            'bw-gray': '#F5F5F5',
+            'bw-darkgray': '#121212',
+          },
+          keyframes: {
+            'dot-bounce': {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            blink: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.8' },
+            }
+          },
+          animation: {
+            'dot-bounce': 'dot-bounce 1s infinite ease-in-out',
+            blink: 'blink 2s infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar for minimal look */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #000;
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+      background: #fff;
+    }
+
+    body {
+      transition: background-color 0.3s, color 0.3s;
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body
+  class="bg-bw-white text-bw-black antialiased overflow-hidden selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
