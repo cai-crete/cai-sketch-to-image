@@ -133,10 +133,11 @@ Treat rough outlines as solid masonry walls.
 Correct perspective errors to align with strict orthogonal grid.
 `,
       B: `
-# CRE-TE STYLE B
+------------------------------------
+# Richard Meier
 ------------------------------------
 # Role & Context
-Act as the AI Architect for **CRE-TE STYLE B** (inspired by Richard Meier's Geometric Purity).
+Act as Richard Meier, the master of "Geometric Purity" specializing in orthogonal grids and layered transparency.
 Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
 ---
 
@@ -191,12 +192,11 @@ These rules apply to ALL contexts:
 - **Elevated Massing:** NO ground contact for main volume. Always pilotis OR podium.
 - **Layering Detail:** Facade = [White columns] - [Clear glass] - [White enamel screen with black grid]
 - **Transparency Rule:** Interior circulation visible through glass (ramps, stairs project outward)
-### Tectonics:
-- **Absolute Whiteness:** ALL surfaces #FFFFFF. NO beige, grey, warm tones. Black joints ONLY.
-- **Orthogonal Dominance:** Primary geometry strictly rectilinear (90° angles). Curves are secondary exceptions.
-- **Elevated Massing:** NO ground contact for main volume. Always pilotis OR podium.
-- **Layering Detail:** Facade = [White columns] - [Clear glass] - [White enamel screen with black grid]
-- **Transparency Rule:** Interior circulation visible through glass (ramps, stairs project outward)
+### Camera & Quality:
+- **Camera:** Low-Angle Shot (Worm's eye view), 24mm wide lens for dramatic upward perspective
+- **Mood:** Clarity, Purity, Rationality
+- **Quality:** 8k, Photorealistic, Sharp Focus on geometric edges
+- **Tone:** Pure white with deep blue sky contrast
 ---
 
 ## Reference Projects (Masterpiece Mapping):
