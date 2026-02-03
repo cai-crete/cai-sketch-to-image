@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { MODEL_ANALYSIS, MODEL_IMAGE_GEN, MODEL_ANALYSIS_FALLBACK, MODEL_IMAGE_GEN_FALLBACK, TIMEOUT_ANALYSIS, TIMEOUT_IMAGE_GEN, SCENARIO_PROFILES } from "../constants";
+import { MODEL_ANALYSIS, MODEL_IMAGE_GEN, MODEL_ANALYSIS_FALLBACK, MODEL_IMAGE_GEN_FALLBACK, TIMEOUT_ANALYSIS, TIMEOUT_IMAGE_GEN } from "../constants";
 import { ImageResolution } from "../types";
 
 // Singleton instance for the GoogleGenAI client
@@ -1000,8 +1000,6 @@ Specific 지침:
   }
 
   try {
-    // Forced Scenario Logic
-    const forcedScenarioKey = mode === 'DETAIL' ? 'B' : 'D';
 
     const generate = async (modelName: string) => {
       return await ai.models.generateContent({
@@ -1159,12 +1157,6 @@ Specific 지침:
 
               ${styleInstruction}
 
-              **MANDATORY OPTICAL SCENARIO:**
-              You MUST apply **Scenario ${forcedScenarioKey}** because the User Mode is **${mode}**.
-              IGNORE the sketch context for lens selection. STRICTLY follow this rule.
-
-              **OPTICAL SCENARIO LIST:**
-              ${JSON.stringify(SCENARIO_PROFILES, null, 2)}
               
               Produce a report in the following strict Markdown format:
 
@@ -1177,10 +1169,6 @@ Specific 지침:
               * **Sensory-Technical Translation (From Room 2 & 3):**
                   * *Abstract:* (User's abstract intent, e.g., "Cozy", "Grand")
                   * *→ Tech Spec:* (Translated physical/optical values)
-              * **Optical Scenario Selection (Fixed by Mode):**
-                  * **Scenario Choice:** [${forcedScenarioKey}]
-                  * **Optical Reasoning:** (Why this lens best fits the sketch's scale/context?)
-                  * **Lens Specs:** [Lens Name] / [Aperture]
 
               ## 2. Spatial & Logic Decoding (From ROOM 3)
               * **Geometry (Layer 1 Input):** [Binary Filtering: Structure to Keep]

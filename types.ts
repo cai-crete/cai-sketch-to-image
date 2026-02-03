@@ -49,11 +49,6 @@ export interface AnalysisReport {
       abstract: string;
       techSpec: string;
     };
-    opticalScenario: {
-      selected: string;
-      reasoning: string;
-      specs: string;
-    };
   };
   spatial: {
     geometry: string;

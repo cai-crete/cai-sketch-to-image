@@ -6,8 +6,7 @@ export const parseAnalysisReport = (markdown: string): AnalysisReport => {
             diagnosis: '',
             reasoning: '',
             designStrategy: '',
-            sensorySpec: { abstract: '', techSpec: '' },
-            opticalScenario: { selected: '', reasoning: '', specs: '' }
+            sensorySpec: { abstract: '', techSpec: '' }
         },
         spatial: {
             geometry: '',
@@ -93,17 +92,6 @@ export const parseAnalysisReport = (markdown: string): AnalysisReport => {
         report.metacognitive.sensorySpec.techSpec = extract([
             /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**(?:→\s*)?(?:Tech Spec|Technical Spec)/i,
         ]);
-        report.metacognitive.opticalScenario = {
-            selected: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Scenario Choice/i,
-            ]),
-            reasoning: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Optical Reasoning/i,
-            ], '',),
-            specs: extract([
-                /(?:^|\n)\s*(?:[*+-]|\d\.)\s*\**Lens Specs/i,
-            ]),
-        };
 
         // 2. Spatial
         report.spatial.geometry = extract([
