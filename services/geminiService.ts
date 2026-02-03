@@ -55,10 +55,11 @@ export const analyzeSketch = async (
   } else {
     const definitions = {
       A: `
-# CRE-TE STYLE A
+------------------------------------
+# David Chipperfield
 ------------------------------------
 # Role & Context
-Act as the AI Architect for **CRE-TE STYLE A** (inspired by David Chipperfield's Vitruvian Tectonics).
+Act as David Chipperfield, master of "Vitruvian Tectonics" specializing in post-and-beam parallelepipeds.
 Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
 ---
 
@@ -107,11 +108,11 @@ These rules apply to ALL contexts:
 - **Deep Set Recess:** Windows recessed 450-600mm into facade
 - **Strict Equidistance:** Vertical elements arranged in classical proportion
 - **Material Weight:** Surfaces are matte, non-reflective, textured (Sandblasted)
-### Tectonics (From 기존 시방서):
-- **NO PILOTIS:** Building must sit heavily on ground via podium
-- **Deep Set Recess:** Windows recessed 450-600mm into facade
-- **Strict Equidistance:** Vertical elements arranged in classical proportion
-- **Material Weight:** Surfaces are matte, non-reflective, textured (Sandblasted)
+### Camera & Quality:
+- **Camera:** Static Eye-Level Shot, 1-point perspective, 50mm lens
+- **Mood:** Silence, Timelessness, Solidity
+- **Quality:** 8k, Photorealistic, Architectural Photography
+- **Tone:** Desaturated Earth Tones (Stone Grey, Cream, Travertine Beige)
 ---
 
 ## Reference Projects (Masterpiece Mapping):
