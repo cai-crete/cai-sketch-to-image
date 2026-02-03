@@ -93,15 +93,6 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ original, generated, onDown
           </svg>
         </button>
 
-        {/* Edit Button (Bottom Center) */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
-          <button
-            onClick={onEdit}
-            className="px-8 py-3 bg-white text-black font-display text-lg tracking-wider hover:bg-gray-100 transition-colors shadow-lg"
-          >
-            EDIT
-          </button>
-        </div>
       </div>
     </div>
   );
