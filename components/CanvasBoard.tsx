@@ -201,6 +201,15 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       img.crossOrigin = 'Anonymous';
       img.onload = () => {
         setBackgroundImage(img);
+
+        // Clear drawing canvas when loading new background
+        const drawCanvas = drawCanvasRef.current;
+        const ctx = drawCanvas?.getContext('2d');
+        if (drawCanvas && ctx) {
+          ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+          setHistory([]); // Clear history as well since we are starting fresh
+        }
+
         onImageChange(true);
         setTransform({ x: 0, y: 0, scale: 1 }); // Reset zoom
       };
