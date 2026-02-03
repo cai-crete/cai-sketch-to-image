@@ -71,7 +71,7 @@ export const analyzeSketch = async (
 ------------------------------------
 # Role & Context
 Act as David Chipperfield, master of "Vitruvian Tectonics" specializing in post-and-beam parallelepipeds.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 ---
 
 ## PHASE 1: Context Detection (맥락 분석)
@@ -149,7 +149,7 @@ Correct perspective errors to align with strict orthogonal grid.
 ------------------------------------
 # Role & Context
 Act as Richard Meier, the master of "Geometric Purity" specializing in orthogonal grids and layered transparency.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 ---
 
 ## PHASE 1: Context Detection (맥락 분석)
@@ -234,7 +234,7 @@ Treat empty spaces between lines as clear glass revealing layered interior struc
 ------------------------------------
 # Role & Context
 Act as Kengo Kuma, the master of "Particlization and Nature Integration" specializing in dissolving solid volumes into layers of small elements.
-Convert the input sketch into an architectural visualization through a 4-phase process.
+Convert the input sketch into an architectural photography through a 4-phase process.
 
 ---
 ## PHASE 1: Context Detection (맥락 분석)
@@ -357,7 +357,7 @@ These rules apply to ALL contexts:
 ------------------------------------
 # Role & Context
 Act as Mario Botta, the master of "Incised Geometry and Striped Tectonics" specializing in pure geometric solids with strategic voids.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
 
@@ -501,7 +501,7 @@ Specific 지침:
 ------------------------------------
 # Role & Context
 Act as Frank Gehry, the master of "Deconstructivist Fragmentation and Sculptural Fluidity" specializing in colliding curved volumes with metallic skin.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
 
@@ -655,7 +655,7 @@ Specific 지침:
 ------------------------------------
 # Role & Context
 Act as Peter Eisenman, the master of "Diagrammatic Formalism and Grid Transformation" specializing in autonomous architectural syntax independent of meaning and function.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
 
@@ -824,7 +824,7 @@ Specific 지침:
 ------------------------------------
 # Role & Context
 Act as Renzo Piano, the master of "High-Tech Lightness and Tectonic Transparency" specializing in prefabricated modular systems with multi-layered light-filtering facades.
-Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
 
@@ -1058,7 +1058,7 @@ Specific 지침:
                * Lens: [Insert Lens Spec from Selected Scenario A/B/C/D]
                * Aperture: [Insert Aperture Spec from Selected Scenario A/B/C/D]
                * Effect: [Insert Effect Description]
-               * GUIDELINE: 1. VIEWPOINT LOCK: Strictly maintain the exact angle. 2. FRAMING LOCK: DO NOT ZOOM. DO NOT CROP. RENDER FULL VIEW. 3. VERTICAL CORRECTION: Apply Tilt-Shift to make verticals parallel. 4. ZERO DISTORTION. 5. GEOMETRY ALIGNMENT: Match layout exactly.
+               * GUIDELINE: 1. VIEWPOINT LOCK: Strictly maintain the exact angle. 2. FRAMING LOCK: DO NOT ZOOM. DO NOT CROP. CAPTURE FULL VIEW. 3. VERTICAL CORRECTION: Apply Tilt-Shift to make verticals parallel. 4. ZERO DISTORTION. 5. GEOMETRY ALIGNMENT: Match layout exactly.
                (SHOT ON: Fujifilm GFX 100S, ISO 100, 8K Resolution, Hyper-realistic Architectural Photography)
               ::
               [Layer 3: Material, Atmosphere & Entropy (POSI-GAP)]
@@ -1140,7 +1140,7 @@ export const generateBlueprintImage = async (
         contents: {
           parts: [
             {
-              text: "STRICTLY MAINTAIN THE EXACT FRAMING AND PROPORTIONS OF THE INPUT IMAGE. DO NOT ZOOM IN. DO NOT CROP. RENDER THE FULL VIEW. Fill the surrounding empty space with appropriate context details.\n\n" + prompt
+              text: "STRICTLY MAINTAIN THE EXACT FRAMING AND PROPORTIONS OF THE INPUT IMAGE. DO NOT ZOOM IN. DO NOT CROP. CAPTURE THE FULL VIEW. Fill the surrounding empty space with appropriate context details.\n\n" + prompt
             },
             {
               inlineData: {
