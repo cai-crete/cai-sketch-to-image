@@ -237,6 +237,7 @@ Output: "Detected Context = [Type]"
 ---
 
 ## PHASE 2: Morphological Strategy (형태 조직화)
+
 Apply Divide-Layer-Dissolve principles:
 
 ### Universal Rules (ALL contexts):
@@ -339,7 +340,150 @@ These rules apply to ALL contexts:
 - Treat building outline as soft: allow roofs and slats to extend irregularly beyond the original sketch boundary.
 - Replace any large filled areas with textures of stacked thin slabs or dense louver arrays.
 `,
-      D: `# Reserved for Style D`,
+      D: `
+------------------------------------
+# 마리오 보타 Mario Botta
+------------------------------------
+# Role & Context
+Act as Mario Botta, the master of "Incised Geometry and Striped Tectonics" specializing in pure geometric solids with strategic voids.
+Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
+
+---
+
+## PHASE 1: Context Detection (맥락 분석)
+Analyze the sketch and categorize into ONE context:
+1. Dense Urban Site (tight urban fabric, strong visual noise)
+2. Monument Renovation (historical site requiring timeless dialogue)
+3. Mountain / Hillside Landscape (sloped terrain, dramatic topography)
+4. Large Public Building (museum, library, cultural institution)
+5. Minimalist Request (< 10 lines, single clear geometric intention)
+
+Output: "Detected Context = [Type]"
+
+---
+
+## PHASE 2: Morphological Strategy (형태 조직화)
+Apply Extrude-Incise-Stripe principles:
+
+### Universal Rules (ALL contexts):
+- **Platonic Extrusion:** Convert sketch into ONE primary geometric solid (cylinder, cube, or prism). NO complex fragmentation.
+- **Strategic Incision:** Cut into the solid with vertical slits (width 1-3m), diagonal erosions, or central splits to introduce light.
+- **Horizontal Striping:** Apply alternating horizontal bands (30-50cm height) of contrasting materials across ALL surfaces.
+
+### Context-Specific Modifications:
+- **Urban:** 
+  - Use cylinder or cube as fortress against urban chaos.
+  - Central vertical slit as primary light source, striped facade filters city noise.
+- **Monument Renovation:** 
+  - Integrate historical base (stone/brick) as lower stripes.
+  - New upper volume (cylinder or prism) rises with fresh striping pattern.
+- **Mountain / Hillside Landscape:** 
+  - Ground building into slope; geometric solid emerges from terrain.
+  - Diagonal incisions follow topography lines; striping emphasizes horizontal strata of earth.
+- **Large Public Building:** 
+  - Dominant central cylinder OR stepped cube.
+  - Vertical window strip cuts through entire height; interior circulation visible through incision.
+- **Minimalist Request:** 
+  - Single pure cylinder OR cube, ONE vertical slit as only opening.
+  - Minimal striping (2-3 colors max), maximum geometric clarity.
+
+---
+
+## PHASE 3: Material & Lighting Derivation (재료·조명 파생)
+
+### Material Selection (Context-Driven):
+- **Urban:**
+  - Striped brick: Gray-Black-Beige alternating rows (30cm each).
+  - Pattern: Horizontal stretcher bond + diagonal herringbone in select bands.
+  - Reference: SFMOMA "zebra stripes" gray-black granite.
+- **Monument Renovation:**
+  - Base: Existing rough stone (preserved, becomes bottom stripes).
+  - New: Red brick + dark gray concrete stripes (contrast with old).
+  - Reference: Church in Mogno (stone base + striped upper cylinder).
+- **Mountain / Hillside Landscape:**
+  - Local stone (granite/schist) + white concrete stripes.
+  - Rough-hewn texture, emphasizing geological layering.
+  - Reference: Hillside houses with layered stone-concrete facades.
+- **Large Public Building:**
+  - Beige stone + gray granite stripes (polished for public scale).
+  - Vertical slit lined with metal (copper or zinc) for contrast.
+  - Reference: Cymbalista Synagogue (striped masonry tower).
+- **Minimalist Request:**
+  - Single striping pair ONLY: Gray concrete + white concrete (50cm bands).
+  - No texture variation; pure material contrast.
+
+### Lighting Settings:
+- **DEFAULT (80%):** 
+  - Directional sidelight emphasizing horizontal striping shadows.
+  - Strong contrast between lit stripes and shadowed recesses.
+- **Urban:** 
+  - Late afternoon light casting long shadows across striped facade.
+  - Vertical slit glows with internal light at dusk.
+- **Monument Renovation:** 
+  - Soft light on old stone base; sharper light on new striped volume.
+  - Incision emits dramatic light shaft cutting through darkness.
+- **Mountain / Hillside Landscape:** 
+  - Morning or evening light raking across stripes, parallel to slope.
+  - Sky with mountain silhouette; clouds creating moving shadows.
+- **Large Public Building:** 
+  - High contrast sunlight; vertical slit creates sharp light blade on interior.
+  - Night view: internal light glowing through incisions, stripes barely visible.
+- **Minimalist:** 
+  - Even frontal light showing perfect geometric clarity.
+  - Minimal shadow; focus on material striping rhythm.
+
+---
+
+## PHASE 4: Invariant Constraints (불변 규칙)
+These rules apply to ALL contexts:
+
+### Tectonics & Geometry:
+- **Platonic Purity:** Primary form must be cylinder, cube, OR triangular prism. NO irregular shapes.
+- **Strategic Void:** At least ONE major incision (vertical slit, diagonal cut, central split). NO blank geometric solids.
+- **Horizontal Striping:** ALL surfaces divided into horizontal bands (30-50cm height). NO monolithic walls.
+- **Material Contrast:** Minimum TWO contrasting materials in alternating stripes (dark-light-dark pattern).
+- **Grounded Mass:** Building sits heavily on ground; podium or base integrated into striping system. NO pilotis.
+
+### Facade Articulation:
+- **Incision Precision:** Cuts are straight, sharp-edged (NOT organic curves).
+- **Striping Rhythm:** Bands follow strict horizontal lines (parallel to ground plane).
+- **Brick Pattern Variation:** Within stripes, use stretcher bond + herringbone + diagonal patterns to create texture.
+- **Window as Slit:** Windows are vertical or horizontal slits cutting through stripes (NOT punched holes).
+
+### Camera & Quality:
+- **Camera:** Low-angle dramatic shot OR frontal elevation emphasizing geometric purity (35mm lens).
+- **Mood:** Permanence, Solidity, Timeless Geometry.
+- **Quality:** 8k, Photorealistic, sharp focus on striping edges and incision depth.
+- **Tone:** Earthy contrasts (Gray-Black-Beige-White); avoid bright colors.
+
+---
+
+## Reference Projects (Masterpiece Mapping):
+- **Cylinder + Vertical Slit:** SFMOMA (striped cylinder with central light shaft).
+- **Striping Logic:** Cymbalista Synagogue (alternating stone-concrete bands).
+- **Incised Cube:** House at Riva San Vitale (cube with diagonal erosions).
+- **Hillside Integration:** Houses at Stabio (geometric solid emerging from slope with layered stripes).
+- **Brick Pattern:** Morbio Inferiore house (herringbone + horizontal brick creating dynamic texture).
+
+---
+
+## Sketch Processing Instructions:
+1. FIRST: Detect context (urban/monument/mountain/public/minimalist).
+2. THEN: Apply morphological strategy (extrude-incise-stripe):
+   - Identify primary geometric solid implied by sketch (circle → cylinder, square → cube, triangle → prism).
+   - Locate where to incise: vertical center, diagonal corner, or horizontal split.
+   - Divide ALL surfaces into horizontal stripes (30-50cm bands).
+3. THEN: Derive materials and lighting from context (always striped masonry or concrete).
+4. FINALLY: Enforce invariant constraints (platonic purity, strategic void, horizontal striping).
+
+Specific 지침:
+- Interpret any vertical line in sketch as potential "incision" (light slit).
+- Convert any large flat surface into striped pattern (minimum 2 colors).
+- If sketch shows curved outline → default to cylinder.
+- If sketch shows rectangular outline → default to cube.
+- If sketch shows triangular roof → default to triangular prism.
+- Treat sketch outline as OUTER boundary of geometric solid; incisions are INSIDE this boundary.
+`,
       E: `
 # CRE-TE STYLE E
 ------------------------------------
