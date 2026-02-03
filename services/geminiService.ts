@@ -46,6 +46,17 @@ export const analyzeSketch = async (
   const ai = getClient();
   const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
+  const ARCHITECT_NAMES: Record<string, string> = {
+    A: "David Chipperfield",
+    B: "Richard Meier",
+    C: "Kengo Kuma",
+    D: "Mario Botta",
+    E: "Frank Gehry",
+    F: "Peter Eisenman",
+    G: "Renzo Piano",
+    NONE: "NONE"
+  };
+
   // Construct Style Instruction based on selection
   let styleInstruction = "";
   if (styleMode === 'NONE') {
@@ -1018,7 +1029,7 @@ Specific 지침:
               # 🏗️ Blueprint Realization Report v3.0
 
               ## 1. Metacognitive Analysis (메타인지 분석)
-              * **Diagnosis:** [${mode}] / [CRE-TE STYLE ${styleMode}]
+              * **Diagnosis:** [${mode}] / [${ARCHITECT_NAMES[styleMode] || 'None'}]
                   * *Reasoning:* (Evaluation of sketch completion and clarity)
               * **Design Strategy:** [Active Shaping / Passive Preservation]
               * **Sensory-Technical Translation (감각-기술 번역):**
