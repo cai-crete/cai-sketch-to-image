@@ -473,6 +473,13 @@ function App() {
                           <p className="font-bold">▪ Metacognitive Analysis</p>
                           <p className="opacity-80">{analysisReport.metacognitive.diagnosis}</p>
                           <p className="opacity-60 text-[10px]">{analysisReport.metacognitive.reasoning}</p>
+
+                          <p className="font-bold mt-2 text-[11px]">▪ Optical Scenario Selection</p>
+                          <div className="pl-1 border-l-2 border-gray-300 dark:border-gray-700 ml-1">
+                            <p className="opacity-80 text-[11px]"><span className="font-semibold">Selected:</span> {analysisReport.metacognitive.opticalScenario?.selected}</p>
+                            <p className="opacity-80 text-[11px]"><span className="font-semibold">Specs:</span> {analysisReport.metacognitive.opticalScenario?.specs}</p>
+                            <p className="opacity-60 text-[10px] mt-0.5">{analysisReport.metacognitive.opticalScenario?.reasoning}</p>
+                          </div>
                           <p className="font-bold mt-2">▪ Spatial & Logic Decoding</p>
                           <p className="opacity-80">Geometry: {analysisReport.spatial.geometry}</p>
                           <p className="opacity-80">Material: {analysisReport.spatial.materiality}</p>

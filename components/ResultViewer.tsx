@@ -83,7 +83,7 @@ const ResultViewer: React.FC<ResultViewerProps> = ({ original, generated, onDown
         {/* Download Button (Top Right Icon) */}
         <button
           onClick={onDownload}
-          className="absolute top-6 right-6 z-30 p-2 text-white hover:text-gray-300 transition-colors bg-black/20 rounded-full backdrop-blur-sm"
+          className="absolute top-4 right-4 z-30 p-2 text-white hover:bg-[#333333] transition-colors bg-black/20 rounded-full backdrop-blur-sm scale-90 origin-top-right"
           title="Download Image"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
