@@ -195,7 +195,17 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       }
       return null;
     },
-    clear: handleFullClear
+    clear: handleFullClear,
+    loadImage: (src: string) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        setBackgroundImage(img);
+        onImageChange(true);
+        setTransform({ x: 0, y: 0, scale: 1 }); // Reset zoom
+      };
+      img.src = src;
+    }
   }));
 
   const saveState = () => {
