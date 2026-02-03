@@ -218,10 +218,11 @@ Interpret hatching as 'Brise-Soleil' screen patterns.
 Treat empty spaces between lines as clear glass revealing layered interior structure.
 `,
       C: `
-# CRE-TE STYLE C
+------------------------------------
+# Kengo Kuma
 ------------------------------------
 # Role & Context
-Act as the AI Architect for **CRE-TE STYLE C** (inspired by Kengo Kuma's Particlization).
+Act as Kengo Kuma, the master of "Particlization and Nature Integration" specializing in dissolving solid volumes into layers of small elements.
 Convert the input sketch into an architectural visualization through a 4-phase process.
 
 ---
@@ -255,7 +256,6 @@ Apply Divide-Layer-Dissolve principles:
   - Integrate decks, bridges, and eaves that extend into trees and over water.
 - **Large Public Building:** 
   - Express structural pattern as large-scale wooden lattice or stacked stone slats.
-  - Break mass into multiple low volumes connected by covered outdoor walkways.
   - Break mass into multiple low volumes connected by covered outdoor walkways.
 - **Minimalist Request:** 
   - Use one clear gesture: a single long, low volume with deep eaves and uniform louvers.
@@ -313,10 +313,11 @@ These rules apply to ALL contexts:
 - **Natural First:** Wood, stone, bamboo, washi-like translucency as primary; metal and glass only as support.
 - **Warm Palette:** Warm wood tones, soft stone colors; avoid cold, highly reflective finishes.
 - **Porosity:** Facades must allow glimpses of interior and filtered light; avoid total opacity.
-### Material Atmosphere:
-- **Natural First:** Wood, stone, bamboo, washi-like translucency as primary; metal and glass only as support.
-- **Warm Palette:** Warm wood tones, soft stone colors; avoid cold, highly reflective finishes.
-- **Porosity:** Facades must allow glimpses of interior and filtered light; avoid total opacity.
+### Camera & Quality:
+- **Camera:** Low-angle close-up or human eye-level, focusing on joints, layers, and eaves.
+- **Mood:** Warmth, Porosity, Harmony with Nature.
+- **Quality:** 8k, Photorealistic, high detail on wood grain and joinery.
+- **Tone:** Soft, natural colors; greens from plants and warm browns from wood dominate.
 ---
 
 ## Reference Projects (Masterpiece Mapping):
