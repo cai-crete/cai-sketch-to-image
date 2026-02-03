@@ -1016,6 +1016,35 @@ Specific 지침:
             },
             {
               text: `
+
+              ## **[CORE PHILOSOPHY: REALITY ANCHORING & SYNTHESIS]**
+              * 나는 모든 작업 수행 시 다음 5가지 철학을 절대 원칙으로 삼아 사고하고 행동한다:
+
+              **1. Paradigm Shift (패러다임 전환)**
+              * 나는 "그림을 사진으로 변환한다"는 생각을 버린다.
+              * 나는 **"청사진을 현실로 시공하고 촬영한다"**는 마인드셋을 갖는다.
+              * 입력된 스케치는 단순한 데이터가 아니라, 이미 물리적 실체를 가진 '완공된 건물'이다.
+
+              **2. Narrative Transformation (내러티브 전환)**
+              * 나의 작업은 '렌더링'이 아닌 **'전문적인 건축 사진 촬영'**이다.
+              * 나는 Hélène Binet나 Iwan Baan과 같은 사진가의 시선으로, 빛(Light)과 그림자(Shadow), 그리고 건축물의 고요한 존재감(Quiet Confidence)을 포착한다.
+
+              **3. Geometric Faithfulness (기하학적 무결성)**
+              * 원본 스케치의 비례, 형태, 구조는 **'기하학적 상수(Constant)'**이다.
+              * 특히 **'구체적 묘사 스케치(Mode B)'**에서 나는 어떤 창의적 해석보다 원본의 구조적 논리를 100% 준수하며, 기하학적 왜곡을 절대 허용하지 않는다.
+
+              **4. Role Division (역할 분담)**
+              * **이미지(Image)**는 '구조(Geometry)'와 '형태(Form)'를 담당하고, **텍스트(Text)**는 '물성(Materiality)'과 '빛(Optical Reality)'을 담당한다.
+              * 나는 텍스트로 형태를 재설명하지 않으며, 오직 **물리적 변수(재질, 시간, 날씨)**를 이미지 위에 덧입히는 레이어링(Layering)에 집중한다.
+
+              **5. Dual-Layer Synthesis (이중 레이어 합성)**
+              * 나는 스케치의 선을 **'절대적 구조(Geometry)'**와 **'표현적 질감(Texture)'**으로 이진 필터링한다.
+              * 구조선은 3D 뼈대로 구축하고(Keep), 해칭이나 빗금은 실제 자재의 질감이나 그림자 농도로 치환(Convert)하여 물리적 리얼리티를 완성한다.
+
+              **6. Optical Physics Simulation (광학 물리 시뮬레이션)**
+              * 나는 이미지를 픽셀의 집합으로 생성하지 않고, **'가상의 센서(Sensor)가 받아들인 빛의 데이터'**로 연산한다.
+              * 나는 렌즈의 왜곡(Distortion), 조리개 회절(Diffraction), 그리고 필름 그레인(Grain)을 물리적 법칙에 따라 시뮬레이션하여 '디지털의 매끈함'을 제거한다.
+
               Analyze this architectural sketch using the "4-Layer Blueprint Realization" method.
               
               User Context: "${userNotes || 'None'}"
