@@ -1000,6 +1000,9 @@ Specific 지침:
   }
 
   try {
+    // Forced Scenario Logic
+    const forcedScenarioKey = mode === 'DETAIL' ? 'B' : 'D';
+
     const generate = async (modelName: string) => {
       return await ai.models.generateContent({
         model: modelName,
@@ -1021,7 +1024,11 @@ Specific 지침:
 
               ${styleInstruction}
 
-              **OPTICAL SCENARIO LIST (Select ONE based on sketch context):**
+              **MANDATORY OPTICAL SCENARIO:**
+              You MUST apply **Scenario ${forcedScenarioKey}** because the User Mode is **${mode}**.
+              IGNORE the sketch context for lens selection. STRICTLY follow this rule.
+
+              **OPTICAL SCENARIO LIST:**
               ${JSON.stringify(SCENARIO_PROFILES, null, 2)}
               
               Produce a report in the following strict Markdown format:
@@ -1035,8 +1042,8 @@ Specific 지침:
               * **Sensory-Technical Translation (감각-기술 번역):**
                   * *Abstract:* (User's abstract intent, e.g., "Cozy", "Grand")
                   * *→ Tech Spec:* (Translated physical/optical values)
-              * **Optical Scenario Selection (AI Autonomous Decision):**
-                  * **Scenario Choice:** [A / B / C / D]
+              * **Optical Scenario Selection (Fixed by Mode):**
+                  * **Scenario Choice:** [${forcedScenarioKey}]
                   * **Optical Reasoning:** (Why this lens best fits the sketch's scale/context?)
                   * **Lens Specs:** [Lens Name] / [Aperture]
 
