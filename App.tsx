@@ -12,57 +12,73 @@ import { useBlueprintGeneration } from './hooks/useBlueprintGeneration';
 // Style Definitions constant remains the same
 const STYLE_DEFINITIONS = {
   A: {
-    architect: "CRE-TE STYLE A",
+    architect: "장중한 메스의 규칙_Vitruvian Tectonics",
     stylePoints: [
-      { title: "Tectonics (구축성)", desc: "" },
-      { title: "Staggering (엇갈리기)", desc: "" },
-      { title: "Strict Equidistance (엄격한 등간격 배치)", desc: "" },
-      { title: "Material Weight (재료의 물성/무게감)", desc: "" }
+      { title: "Fragment (분절)", desc: "" },
+      { title: "Stagger (엇갈림)", desc: "" },
+      { title: "Deep Set Recess (창호의 깊이감)", desc: "" },
+      { title: "Contextual Material Derivation (맥락적 재료 파생)", desc: "" },
+      { title: "Diffuse Timelessness (확산된 시간성)", desc: "" }
     ]
   },
   B: {
-    architect: "CRE-TE STYLE B",
+    architect: "순수한 기하학적형태_Geometric Purity",
     stylePoints: [
-      { title: "Orthogonal Grid (직교 격자)", desc: "" },
+      { title: "Orthogonal Grid (직교 그리드)", desc: "" },
+      { title: "Layered Transparency (레이어 투명성)", desc: "" },
+      { title: "Elevated Massing (띄워진 매스)", desc: "" },
       { title: "Absolute Whiteness (절대 백색)", desc: "" },
-      { title: "Elevated Massing (매스의 부양)", desc: "" },
-      { title: "Transparency Rule (투명성 규칙)", desc: "" }
+      { title: "Hard Sunlight Chiaroscuro (강렬한 명암법)", desc: "" }
     ]
   },
   C: {
-    architect: "CRE-TE STYLE C",
+    architect: "가구식 구조_Particlization",
     stylePoints: [
-      { title: "Expressed Joinery (결구의 노출)", desc: "" },
+      { title: "Divide (분할)", desc: "" },
+      { title: "Kigumi Joinery (결구 접합)", desc: "" },
       { title: "Deep Eaves (깊은 처마)", desc: "" },
-      { title: "Blurred Boundary (경계의 소거)", desc: "" },
-      { title: "Low to the Ground (지면 밀착형)", desc: "" }
+      { title: "Blurred Edge (흐릿한 경계)", desc: "" },
+      { title: "Komorebi Lighting (목과 빛)", desc: "" }
+    ]
+  },
+  D: {
+    architect: "고지식한 조형성_Incised Geometry",
+    stylePoints: [
+      { title: "Platonic Extrusion (플라톤적 돌출)", desc: "" },
+      { title: "Strategic Incision (전략적 절개)", desc: "" },
+      { title: "Horizontal Striping (수평 줄무늬)", desc: "" },
+      { title: "Brick Pattern Variation (벽돌 패턴 변주)", desc: "" },
+      { title: "Grounded Solidity (접지된 견고함)", desc: "" }
     ]
   },
   E: {
-    architect: "CRE-TE STYLE E",
+    architect: "조형적인 유선형_Sculptural Fluidity",
     stylePoints: [
-      { title: "Geometric Purity (기하학적 순수성)", desc: "" },
-      { title: "Surface Texture (면의 질감)", desc: "" },
-      { title: "Material Essence (본질적인 물성)", desc: "" },
-      { title: "Quiet Confidence (고요한 존재감)", desc: "" }
+      { title: "Collide & Explode (충돌과 폭발)", desc: "" },
+      { title: "Curve & Crumple (곡면과 구김)", desc: "" },
+      { title: "Metallic Skin (금속 피부)", desc: "" },
+      { title: "Asymmetric Fragmentation (비대칭 파편화)", desc: "" },
+      { title: "Oblique Sunlight Drama (비스듬한 햇빛 드라마)", desc: "" }
     ]
   },
   F: {
-    architect: "CRE-TE STYLE F",
+    architect: "다이어그램의 구조화_Diagrammatic Formalism",
     stylePoints: [
-      { title: "Organic Integration (유기적 통합)", desc: "" },
-      { title: "Natural Flow (자연스러운 흐름)", desc: "" },
-      { title: "Breathing Material (숨 쉬는 물성)", desc: "" },
-      { title: "Patina (시간의 흐름)", desc: "" }
+      { title: "Dual Grid Superimposition (이중 그리드 중첩)", desc: "" },
+      { title: "Transformation Sequence (변형 연산 시퀀스)", desc: "" },
+      { title: "Indexical Trace (지표적 흔적)", desc: "" },
+      { title: "Anti-Compositional Logic (반구성 논리)", desc: "" },
+      { title: "White Neutrality (백색 중립성)", desc: "" }
     ]
   },
   G: {
-    architect: "CRE-TE STYLE G",
+    architect: "노출된 하이테크_Tectonic Transparency",
     stylePoints: [
-      { title: "Structural Honesty (구조적 솔직함)", desc: "" },
-      { title: "Raw Material Weight (거친 재료의 무게감)", desc: "" },
-      { title: "Industrial Aesthetics (공업적 미학)", desc: "" },
-      { title: "Reclaimed Texture (재생 텍스처/세월의 흔적)", desc: "" }
+      { title: "Kit of Parts (부품 조립)", desc: "" },
+      { title: "Multi-Layered Facade (다층 입면)", desc: "" },
+      { title: "Floating Roof (떠 있는 지붕)", desc: "" },
+      { title: "Exposed Services (노출 설비)", desc: "" },
+      { title: "Adaptive Permeability (적응적 투과성)", desc: "" }
     ]
   }
 };

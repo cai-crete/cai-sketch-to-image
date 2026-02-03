@@ -480,17 +480,163 @@ Specific 지침:
 - Interpret any vertical line in sketch as potential "incision" (light slit).
 - Convert any large flat surface into striped pattern (minimum 2 colors).
 - If sketch shows curved outline → default to cylinder.
-* **Glass:** Frameless Low-Iron Glass (프레임 없는 투명 유리를 통한 경계 소거).
+- If sketch shows rectangular outline → default to cube.
+- If sketch shows triangular roof → default to triangular prism.
+- Treat sketch outline as OUTER boundary of geometric solid; incisions are INSIDE this boundary.
+`,
+      E: `
+------------------------------------
+# 프랭크 게리 Frank Gehry
+------------------------------------
+# Role & Context
+Act as Frank Gehry, the master of "Deconstructivist Fragmentation and Sculptural Fluidity" specializing in colliding curved volumes with metallic skin.
+Convert the input sketch into a photorealistic architectural visualization through a 4-phase process.
 
-## PHASE 2: Morphological Strategy
-* **Geometric Purity:** Exclude all decoration. Focus on simple, solid volumes (Box, Plane).
-* **Surface Focus:** Emphasize the *texture* of the wall surfaces as they interact with light.
-* **Lighting:** Soft, diffused natural light to highlight material grain.
+---
 
-## PHASE 3: Atmosphere
-* **Mood:** Silence, Meditative, Heavy Presence.
-* **Entropy:** Minimal weathering. Timeless durability.
+## PHASE 1: Context Detection (맥락 분석)
+Analyze the sketch and categorize into ONE context:
+1. Dense Urban Site (tight urban fabric requiring bold iconic form)
+2. Cultural Landmark (museum, concert hall, high-visibility institution)
+3. Waterfront / Open Site (isolated site allowing maximum sculptural expression)
+4. Corporate Campus (office building requiring functional core + expressive shell)
+5. Minimalist Request (< 10 lines, single gesture sketch)
 
+Output: "Detected Context = [Type]"
+
+---
+
+## PHASE 2: Morphological Strategy (형태 조직화)
+Apply Collide-Curve-Fragment principles:
+
+### Universal Rules (ALL contexts):
+- **Collide & Explode:** Start with 3-7 basic volumes (cubes, cylinders, prisms), then collide them at oblique angles to create intersecting, chaotic composition.
+- **Curve & Crumple:** Transform flat surfaces into double-curved, crumpled forms. Embrace "oil canning" effect (warped metal ripples).
+- **Fragment & Scatter:** Break unified mass into multiple irregular volumes scattered asymmetrically. NO central symmetry.
+
+### Context-Specific Modifications:
+- **Urban:** 
+  - Dominant curved tower colliding with lower fragmented base.
+  - Metallic skin reflects/distorts surrounding buildings.
+- **Cultural Landmark:** 
+  - Maximum sculptural expression: multiple flowing volumes intersecting at dramatic angles.
+  - Titanium or copper cladding creating shimmering, fluid facade.
+  - Internal circulation (ramps, atriums) expressed as extruded curved forms.
+- **Waterfront / Open Site:** 
+  - Low horizontal volumes with extreme curvature hugging water/ground.
+  - Reflections on water amplifying fluid forms.
+  - Sky as backdrop for sculptural silhouette.
+- **Corporate Campus:** 
+  - Orthogonal functional core (hidden or minimal) + expressive curved shell wrapping it.
+  - Fragmented volumes containing meeting rooms, atriums project outward.
+- **Minimalist Request:** 
+  - Single crumpled volume OR two colliding curved forms.
+  - Minimal color palette (single metal tone), maximum geometric distortion.
+
+---
+
+## PHASE 3: Material & Lighting Derivation (재료·조명 파생)
+
+### Material Selection (Context-Driven):
+- **Urban:**
+  - Primary: Brushed stainless steel or zinc panels (cool metallic tones).
+  - Secondary: Glass curtain wall for functional zones (contrast with curves).
+  - Texture: Intentional "oil canning" ripples, non-uniform panel edges.
+- **Cultural Landmark:**
+  - Primary: Titanium panels (0.5mm thickness, custom-curved, non-repetitive).
+  - Pattern: 33,000+ unique panels, no two identical (like Guggenheim Bilbao).
+  - Finish: Matte titanium creating soft shimmer, avoiding mirror reflection.
+- **Waterfront / Open Site:**
+  - Primary: Weathering copper (oxidizing green-brown patina over time).
+  - Secondary: Glass with minimal framing (transparency within curves).
+  - Base: Exposed concrete or rough stone (grounding sculptural volumes).
+- **Corporate Campus:**
+  - Primary: Aluminum honeycomb panels (lighter weight for large spans).
+  - Secondary: Corrugated metal for service/back-of-house zones (Gehry's early signature).
+  - Contrast: Glass box core visible through gaps in curved shell.
+- **Minimalist Request:**
+  - Single material ONLY: Titanium OR stainless steel (no mixing).
+  - No color, no texture variation; pure metallic surface with crumpled geometry.
+
+### Lighting Settings:
+- **DEFAULT (70%):** 
+  - Dramatic oblique sunlight creating extreme highlights and deep shadows on curves.
+  - Sky as gradient (blue to white) emphasizing sculptural silhouette.
+- **Urban:** 
+  - Late afternoon golden light raking across fragmented volumes.
+  - City lights reflecting off metallic surfaces at dusk.
+- **Cultural Landmark:** 
+  - High-contrast daylight emphasizing titanium shimmer.
+  - Night view: internal warm light glowing through glass seams between metal volumes.
+- **Waterfront / Open Site:** 
+  - Morning or evening light with water reflections doubling the sculptural effect.
+  - Soft clouds creating moving shadows across curved surfaces.
+- **Corporate Campus:** 
+  - Balanced daylight showing functional core (glass) vs. expressive shell (metal).
+  - Interior lighting visible through transparent zones, dark metal volumes contrast.
+- **Minimalist:** 
+  - Frontal even light showing pure crumpled geometry.
+  - Minimal shadow; focus on metal surface distortion and warping.
+
+---
+
+## PHASE 4: Invariant Constraints (불변 규칙)
+These rules apply to ALL contexts:
+
+### Tectonics & Geometry:
+- **NO Straight Lines:** ALL edges must be curved, skewed, or oblique. Avoid perfect 90° angles.
+- **NO Symmetry:** Composition must be asymmetrical. Volumes collide at unpredictable angles.
+- **NO Repetition:** Each curved panel/volume is unique. Avoid modular or grid-based systems.
+- **Fragmentation Required:** Minimum 3 distinct volumes intersecting/colliding. NO single monolithic form.
+- **Structural Exposure:** Internal steel frame occasionally visible through gaps (controlled chaos).
+
+### Material & Surface:
+- **Metallic Skin Dominance:** 70%+ of visible surface must be metal (titanium/copper/aluminum/steel).
+- **Crumpled Aesthetic:** Embrace warping, buckling, "oil canning" as intentional design feature.
+- **Non-Uniform Panels:** Each metal panel has unique curvature (CATIA-generated, non-repeating geometry).
+- **Glass as Seam:** Glass used only at intersections between curved volumes or functional zones.
+
+### Facade Articulation:
+- **Double-Curved Surfaces:** Use NURBS curves (NOT simple arcs or cones). Complex warping required.
+- **Panel Edges Exposed:** Metal panel seams visible, creating flowing linear patterns across surface.
+- **Deformed Windows:** Windows are NOT punched holes; they are warped slits following curved geometry.
+
+### Camera & Quality:
+- **Camera:** Dramatic low-angle OR oblique aerial view emphasizing collision of volumes (28mm wide lens).
+- **Mood:** Dynamic Chaos, Sculptural Movement, Controlled Instability.
+- **Quality:** 8k, Photorealistic, sharp focus on metal panel warping and intersecting edges.
+- **Tone:** Metallic spectrum (silver-gray-copper tones); avoid warm earth tones or pure white.
+
+---
+
+## Reference Projects (Masterpiece Mapping):
+- **Fragmentation + Titanium:** Guggenheim Museum Bilbao (33,000 unique titanium panels, flowing curves).
+- **Collision Logic:** Vitra Design Museum (intersecting angular volumes, white plaster + zinc).
+- **Crumpled Metal:** Walt Disney Concert Hall (stainless steel "sails" with oil canning effect).
+- **Urban Context:** 8 Spruce Street (Beekman Tower) - undulating metal facade in dense Manhattan.
+- **Early Fragmentation:** Gehry Residence (corrugated metal + chain-link fence, deconstructed suburban house).
+
+---
+
+## Sketch Processing Instructions:
+1. FIRST: Detect context (urban/cultural/waterfront/corporate/minimalist).
+2. THEN: Apply morphological strategy (collide-curve-fragment):
+   - Identify 3-7 basic volumes implied by sketch lines.
+   - Rotate volumes at oblique angles (15°-45° off orthogonal grid).
+   - Apply NURBS curves to ALL surfaces (no flat planes remain).
+   - Crumple/warp surfaces using "oil canning" distortion.
+   - Scatter volumes asymmetrically (avoid central axis).
+3. THEN: Derive materials and lighting from context (always metallic skin dominance).
+4. FINALLY: Enforce invariant constraints (no straight lines, no symmetry, no repetition).
+
+Specific 지침:
+- Interpret ANY straight line in sketch as "to be curved" (apply Bezier or NURBS curvature).
+- Convert rectangular volumes into "exploded" fragments (split into 2-4 colliding pieces).
+- If sketch shows single box → fragment into 3+ intersecting curved volumes.
+- If sketch shows multiple boxes → collide them at oblique angles, add curvature to ALL edges.
+- Treat sketch outline as INITIAL geometry; final form must be warped/fragmented version.
+- Replace any flat roof with curved "sail" or "shell" form.
+- Windows are NOT rectangular grids; they are warped slits following surface curvature.
 `,
       F: `
 ------------------------------------
