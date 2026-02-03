@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { MODEL_ANALYSIS, MODEL_IMAGE_GEN, MODEL_ANALYSIS_FALLBACK, MODEL_IMAGE_GEN_FALLBACK, MODEL_IMAGE_REFINE, MODEL_IMAGE_REFINE_FALLBACK, TIMEOUT_ANALYSIS, TIMEOUT_IMAGE_GEN, TIMEOUT_REFINE, SCENARIO_PROFILES, SYSTEM_ARCHITECTURE_CONSTITUTION } from "../constants";
+import { MODEL_ANALYSIS, MODEL_IMAGE_GEN, MODEL_ANALYSIS_FALLBACK, MODEL_IMAGE_GEN_FALLBACK, TIMEOUT_ANALYSIS, TIMEOUT_IMAGE_GEN, SCENARIO_PROFILES } from "../constants";
 import { ImageResolution } from "../types";
 
 // Singleton instance for the GoogleGenAI client
@@ -415,7 +415,6 @@ Act as the AI Architect for **CRE-TE STYLE G** [Raw Industrialism] (로우 인�
               * **Priority 1:** You MUST refer to the following specific guide for STYLE [${styleMode}]:
               ${definitions[styleMode as keyof typeof definitions]}
               
-              * **CRITICAL EXCEPTION:** The SYSTEM_ARCHITECTURE_CONSTITUTION acts as the Supreme Law.
               * **CAMERA SELECTION:** You (AI) MUST select the best Optical Scenario (A/B/C/D) from the list below based on the sketch context.
               * **SCENARIO PRIORITY:** The selected Scenario's optical specs (Lens/Aperture) OVERRIDE any style defaults.
               * **NEVER MOVE CAMERA:** Even if the Style or Scenario implies a view change, you MUST LOCK the camera to the sketch's viewpoint.
@@ -437,8 +436,6 @@ Act as the AI Architect for **CRE-TE STYLE G** [Raw Industrialism] (로우 인�
             },
             {
               text: `
-              ${SYSTEM_ARCHITECTURE_CONSTITUTION}
-
               Analyze this architectural sketch using the "4-Layer Blueprint Realization" method.
               
               User Context: "${userNotes || 'None'}"
@@ -566,7 +563,7 @@ export const generateBlueprintImage = async (
         contents: {
           parts: [
             {
-              text: SYSTEM_ARCHITECTURE_CONSTITUTION + "\n\nSTRICTLY MAINTAIN THE EXACT FRAMING AND PROPORTIONS OF THE INPUT IMAGE. DO NOT ZOOM IN. DO NOT CROP. RENDER THE FULL VIEW. Fill the surrounding empty space with appropriate context details.\n\n" + prompt
+              text: "STRICTLY MAINTAIN THE EXACT FRAMING AND PROPORTIONS OF THE INPUT IMAGE. DO NOT ZOOM IN. DO NOT CROP. RENDER THE FULL VIEW. Fill the surrounding empty space with appropriate context details.\n\n" + prompt
             },
             {
               inlineData: {
@@ -614,82 +611,10 @@ export const generateBlueprintImage = async (
 
     if (!draftImage) throw new Error("No image data found in response");
 
-    // ---------------------------------------------------------
-    // STEP 3: REFINEMENT (DISABLED PER USER REQUEST)
-    // ---------------------------------------------------------
-    // The user requested to skip the Refine step due to model errors.
-    // We return the Draft Image directly.
-    console.log("Skipping Step 3: Refinement (Disabled). Returning Draft Image.");
     return draftImage;
-
-    /*
-    try {
-      console.log("Starting Step 3: Refinement with", MODEL_IMAGE_REFINE);
-      const refinedImage = await withTimeout(refineDraftImage(draftImage, prompt, MODEL_IMAGE_REFINE), TIMEOUT_REFINE);
-      return refinedImage;
-    } catch (refineError: any) {
-      console.warn(`Primary Refinement failed (${refineError.message}). Retrying with Fallback: ${MODEL_IMAGE_REFINE_FALLBACK}`);
-      try {
-        const fallbackRefinedImage = await withTimeout(refineDraftImage(draftImage, prompt, MODEL_IMAGE_REFINE_FALLBACK), TIMEOUT_REFINE);
-        return fallbackRefinedImage;
-      } catch (fallbackError) {
-        console.warn("Fallback Refinement also failed. Returning Draft Image.", fallbackError);
-        return draftImage; // Final Fallback
-      }
-    }
-    */
-
   } catch (error) {
     console.error("Generation Error:", error);
     throw new Error("Failed to generate visualization.");
   }
 };
 
-// Internal Helper for Step 3
-const refineDraftImage = async (draftBase64: string, originalPrompt: string, modelName: string): Promise<string> => {
-  const ai = getClient();
-  const cleanDraft = draftBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
-
-  const refinePrompt = `
-    [ROLE: Architectural Photographer & Post-Production Expert]
-    [TASK: Refine this architectural rendering into a hyper-realistic photograph]
-    
-    INPUT CONTEXT:
-    The attached image is a 'Draft Render'. It has the correct geometry and composition, but lacks photorealistic definition.
-    
-    STRICT CONSTRAINTS (DO NOT IGNORE):
-    1. **GEOMETRY LOCK:** You MUST strictly preserve the structural lines, perspective, and framing of the Input Image. Do not rotate, zoom, or distort.
-    2. **TEXTURE UPGRADE:** Replace the 'rendered' look with real-world textures (concrete, glass, wood, brick) based on the context.
-    3. **LIGHTING FIX:** Apply natural global illumination, ambient occlusion, and realistic reflections.
-    4. **NO HALLUCINATION:** Do not add new buildings or random objects not present in the draft.
-    
-    ORIGINAL DESIGN INTENT:
-    ${originalPrompt}
-  `;
-
-  const response = await ai.models.generateContent({
-    model: modelName,
-    contents: {
-      parts: [
-        { text: refinePrompt },
-        {
-          inlineData: {
-            mimeType: 'image/png',
-            data: cleanDraft
-          }
-        }
-      ]
-    }
-  });
-
-  const parts = response.candidates?.[0]?.content?.parts;
-  if (parts) {
-    for (const part of parts) {
-      if (part.inlineData && part.inlineData.data) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-  }
-
-  throw new Error("Refinement returned no image data");
-};
