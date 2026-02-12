@@ -668,6 +668,10 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
         onTouchStart={startInteraction}
         onTouchMove={moveInteraction}
         onTouchEnd={endInteraction}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
       >
         {/* Drag Overlay */}
         {isDragging && (
