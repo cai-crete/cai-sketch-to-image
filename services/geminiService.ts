@@ -47,13 +47,13 @@ export const analyzeSketch = async (
   const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
   const ARCHITECT_NAMES: Record<string, string> = {
-    A: "David Chipperfield",
-    B: "Richard Meier",
-    C: "Kengo Kuma",
-    D: "Mario Botta",
-    E: "Frank Gehry",
-    F: "Peter Eisenman",
-    G: "Renzo Piano",
+    A: "CRE-TE A",
+    B: "CRE-TE B",
+    C: "CRE-TE C",
+    D: "CRE-TE D",
+    E: "CRE-TE E",
+    F: "CRE-TE F",
+    G: "CRE-TE G",
     NONE: "NONE"
   };
 
@@ -1163,8 +1163,7 @@ Specific 지침:
               # 🏗️ Blueprint Realization Report v3.0
 
               ## 1. Metacognitive Analysis (From ROOM 1 & 2)
-              * **Diagnosis:** [${mode}] / [CRE-TE ${styleMode}]
-                  * *CRITICAL COMPLIANCE:* In the above 'Diagnosis' line, YOU MUST output '[CRE-TE ${styleMode}]'. DO NOT replace 'CRE-TE' with the specific architect's name (e.g. David Chipperfield). This is a system requirement.
+              * **Diagnosis:** [${mode}] / [${ARCHITECT_NAMES[styleMode] || 'None'}]
                   * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy)
               * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2)
               * **Sensory-Technical Translation (From Room 2 & 3):**
