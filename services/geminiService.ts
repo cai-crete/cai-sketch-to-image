@@ -1163,7 +1163,7 @@ Specific 지침:
               # 🏗️ Blueprint Realization Report v3.0
 
               ## 1. Metacognitive Analysis (From ROOM 1 & 2)
-              * **Diagnosis:** [${mode}] / [${ARCHITECT_NAMES[styleMode] || 'None'}]
+              * **Diagnosis:** [${mode}] / [CRE-TE ${styleMode}]
                   * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy)
               * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2)
               * **Sensory-Technical Translation (From Room 2 & 3):**
