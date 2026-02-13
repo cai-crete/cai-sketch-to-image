@@ -39,6 +39,31 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
   const lastTouchDistRef = useRef<number | null>(null);
   const lastTouchCenterRef = useRef<{ x: number, y: number } | null>(null);
 
+  // Fix: Prevent default touch actions (zoom, scroll) on canvas for tablet support
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventDefault = (e: TouchEvent) => {
+      // Allow multi-touch gestures if handled elsewhere, but generally blocking default is safest for pure drawing/pan-zoom app
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    // Attach non-passive listeners to allow e.preventDefault()
+    // This is critical for preventing double-tap zoom on iOS/Android
+    container.addEventListener('touchstart', preventDefault, { passive: false });
+    container.addEventListener('touchmove', preventDefault, { passive: false });
+    container.addEventListener('touchend', preventDefault, { passive: false });
+
+    return () => {
+      container.removeEventListener('touchstart', preventDefault);
+      container.removeEventListener('touchmove', preventDefault);
+      container.removeEventListener('touchend', preventDefault);
+    };
+  }, []);
+
   // Helper: Paint the background layer
   const paintBackground = useCallback(() => {
     const bgCanvas = bgCanvasRef.current;
