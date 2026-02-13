@@ -67,7 +67,7 @@ export const analyzeSketch = async (
     const definitions = {
       A: `
 ------------------------------------
-# David Chipperfield
+# CRE-TE Style A
 ------------------------------------
 # Role & Context
 Act as David Chipperfield, master of "Vitruvian Tectonics" specializing in post-and-beam parallelepipeds.
@@ -145,7 +145,7 @@ Correct perspective errors to align with strict orthogonal grid.
 `,
       B: `
 ------------------------------------
-# Richard Meier
+# CRE-TE Style B
 ------------------------------------
 # Role & Context
 Act as Richard Meier, the master of "Geometric Purity" specializing in orthogonal grids and layered transparency.
@@ -230,7 +230,7 @@ Treat empty spaces between lines as clear glass revealing layered interior struc
 `,
       C: `
 ------------------------------------
-# Kengo Kuma
+# CRE-TE Style C
 ------------------------------------
 # Role & Context
 Act as Kengo Kuma, the master of "Particlization and Nature Integration" specializing in dissolving solid volumes into layers of small elements.
@@ -353,7 +353,7 @@ These rules apply to ALL contexts:
 `,
       D: `
 ------------------------------------
-# 마리오 보타 Mario Botta
+# CRE-TE Style D
 ------------------------------------
 # Role & Context
 Act as Mario Botta, the master of "Incised Geometry and Striped Tectonics" specializing in pure geometric solids with strategic voids.
@@ -497,7 +497,7 @@ Specific 지침:
 `,
       E: `
 ------------------------------------
-# 프랭크 게리 Frank Gehry
+# CRE-TE Style E
 ------------------------------------
 # Role & Context
 Act as Frank Gehry, the master of "Deconstructivist Fragmentation and Sculptural Fluidity" specializing in colliding curved volumes with metallic skin.
@@ -651,7 +651,7 @@ Specific 지침:
 `,
       F: `
 ------------------------------------
-# 피터아이젠만 Peter Eisenman
+# CRE-TE Style F
 ------------------------------------
 # Role & Context
 Act as Peter Eisenman, the master of "Diagrammatic Formalism and Grid Transformation" specializing in autonomous architectural syntax independent of meaning and function.
@@ -820,7 +820,7 @@ Specific 지침:
 `,
       G: `
 ------------------------------------
-# 렌조피아노 Renzo Piano
+# CRE-TE Style G
 ------------------------------------
 # Role & Context
 Act as Renzo Piano, the master of "High-Tech Lightness and Tectonic Transparency" specializing in prefabricated modular systems with multi-layered light-filtering facades.
