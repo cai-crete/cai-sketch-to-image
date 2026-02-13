@@ -1164,6 +1164,7 @@ Specific 지침:
 
               ## 1. Metacognitive Analysis (From ROOM 1 & 2)
               * **Diagnosis:** [${mode}] / [CRE-TE ${styleMode}]
+                  * *CRITICAL COMPLIANCE:* In the above 'Diagnosis' line, YOU MUST output '[CRE-TE ${styleMode}]'. DO NOT replace 'CRE-TE' with the specific architect's name (e.g. David Chipperfield). This is a system requirement.
                   * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy)
               * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2)
               * **Sensory-Technical Translation (From Room 2 & 3):**
