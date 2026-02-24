@@ -1292,15 +1292,22 @@ export const generateBlueprintImage = async (
     };
 
     let response;
-    // Primary Attempt (No fallback to text model)
+    // Primary Attempt
     try {
       response = await withTimeout(generate(MODEL_IMAGE_GEN), TIMEOUT_IMAGE_GEN);
     } catch (error: any) {
-      console.warn(`Image generation failed (Error: ${error.message}).`);
-      if (error.message && (error.message.includes('503') || error.message.includes('demand') || error.message.includes('overloaded'))) {
-        throw new Error("API_OVERLOADED");
+      console.warn(`Primary image generation failed (Error: ${error.message}). Retrying with fallback model...`);
+      // Fallback Attempt
+      try {
+        response = await withTimeout(generate(MODEL_IMAGE_GEN_FALLBACK), TIMEOUT_IMAGE_GEN);
+      } catch (fallbackError: any) {
+        console.warn(`Fallback image generation failed (Error: ${fallbackError.message}).`);
+        if ((error.message && (error.message.includes('503') || error.message.includes('demand') || error.message.includes('overloaded'))) ||
+          (fallbackError.message && (fallbackError.message.includes('503') || fallbackError.message.includes('demand') || fallbackError.message.includes('overloaded')))) {
+          throw new Error("API_OVERLOADED");
+        }
+        throw fallbackError;
       }
-      throw error;
     }
 
     const parts = response.candidates?.[0]?.content?.parts;
