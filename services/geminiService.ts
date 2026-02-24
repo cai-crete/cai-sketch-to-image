@@ -1292,13 +1292,15 @@ export const generateBlueprintImage = async (
     };
 
     let response;
+    // Primary Attempt (No fallback to text model)
     try {
-      // Primary Attempt
       response = await withTimeout(generate(MODEL_IMAGE_GEN), TIMEOUT_IMAGE_GEN);
     } catch (error: any) {
-      console.warn(`Image generation failed (Error: ${error.message}). Retrying with fallback model: ${MODEL_IMAGE_GEN_FALLBACK}`);
-      // Fallback Attempt
-      response = await generate(MODEL_IMAGE_GEN_FALLBACK);
+      console.warn(`Image generation failed (Error: ${error.message}).`);
+      if (error.message && (error.message.includes('503') || error.message.includes('demand') || error.message.includes('overloaded'))) {
+        throw new Error("API_OVERLOADED");
+      }
+      throw error;
     }
 
     const parts = response.candidates?.[0]?.content?.parts;
@@ -1319,9 +1321,12 @@ export const generateBlueprintImage = async (
     if (!draftImage) throw new Error("No image data found in response");
 
     return draftImage;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Generation Error:", error);
-    throw new Error("Failed to generate visualization.");
+    if (error.message === "API_OVERLOADED" || (error.message && error.message.includes("503"))) {
+      throw new Error("현재 구글 제미나이(Gemini) 이미지 생성 서버에 요청이 폭주하여 대기 중입니다. 잠시 후 다시 시도해 주세요.");
+    }
+    throw new Error(error.message || "Failed to generate visualization.");
   }
 };
 
