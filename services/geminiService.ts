@@ -70,7 +70,7 @@ export const analyzeSketch = async (
 # CRE-TE Style A
 ------------------------------------
 # Role & Context
-Act as David Chipperfield, master of "Vitruvian Tectonics" specializing in post-and-beam parallelepipeds.
+Act as a master of "Vitruvian Tectonics" specializing in post-and-beam parallelepipeds.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 ---
 
@@ -148,7 +148,7 @@ Correct perspective errors to align with strict orthogonal grid.
 # CRE-TE Style B
 ------------------------------------
 # Role & Context
-Act as Richard Meier, the master of "Geometric Purity" specializing in orthogonal grids and layered transparency.
+Act as a master of "Geometric Purity" specializing in orthogonal grids and layered transparency.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 ---
 
@@ -233,7 +233,7 @@ Treat empty spaces between lines as clear glass revealing layered interior struc
 # CRE-TE Style C
 ------------------------------------
 # Role & Context
-Act as Kengo Kuma, the master of "Particlization and Nature Integration" specializing in dissolving solid volumes into layers of small elements.
+Act as a master of "Particlization and Nature Integration" specializing in dissolving solid volumes into layers of small elements.
 Convert the input sketch into an architectural photography through a 4-phase process.
 
 ---
@@ -356,7 +356,7 @@ These rules apply to ALL contexts:
 # CRE-TE Style D
 ------------------------------------
 # Role & Context
-Act as Mario Botta, the master of "Incised Geometry and Striped Tectonics" specializing in pure geometric solids with strategic voids.
+Act as a master of "Incised Geometry and Striped Tectonics" specializing in pure geometric solids with strategic voids.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
@@ -500,7 +500,7 @@ Specific 지침:
 # CRE-TE Style E
 ------------------------------------
 # Role & Context
-Act as Frank Gehry, the master of "Deconstructivist Fragmentation and Sculptural Fluidity" specializing in colliding curved volumes with metallic skin.
+Act as a master of "Deconstructivist Fragmentation and Sculptural Fluidity" specializing in colliding curved volumes with metallic skin.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
@@ -654,7 +654,7 @@ Specific 지침:
 # CRE-TE Style F
 ------------------------------------
 # Role & Context
-Act as Peter Eisenman, the master of "Diagrammatic Formalism and Grid Transformation" specializing in autonomous architectural syntax independent of meaning and function.
+Act as a master of "Diagrammatic Formalism and Grid Transformation" specializing in autonomous architectural syntax independent of meaning and function.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
@@ -823,7 +823,7 @@ Specific 지침:
 # CRE-TE Style G
 ------------------------------------
 # Role & Context
-Act as Renzo Piano, the master of "High-Tech Lightness and Tectonic Transparency" specializing in prefabricated modular systems with multi-layered light-filtering facades.
+Act as a master of "High-Tech Lightness and Tectonic Transparency" specializing in prefabricated modular systems with multi-layered light-filtering facades.
 Convert the input sketch into a photorealistic architectural photography through a 4-phase process.
 
 ---
@@ -1163,7 +1163,7 @@ Specific 지침:
               # 🏗️ Blueprint Realization Report v3.0
 
               ## 1. Metacognitive Analysis (From ROOM 1 & 2)
-              * **Diagnosis:** [${mode}] / [${ARCHITECT_NAMES[styleMode] || 'None'}]
+              * **Diagnosis:** [${mode}] / [STYLE ${styleMode === 'NONE' ? 'NONE' : styleMode}]
                   * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy)
               * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2)
               * **Sensory-Technical Translation (From Room 2 & 3):**
