@@ -59,7 +59,7 @@ const Library: React.FC<LibraryProps> = ({ items, onSelect, onDelete, onClose })
                       {new Date(item.timestamp).toLocaleDateString()}
                     </p>
                     <p className="font-sans text-xs font-medium truncate mt-1">
-                      {item.prompt || "Untitled"}
+                      {item.analysisReport?.metacognitive.diagnosis || item.prompt || "Untitled"}
                     </p>
                   </div>
                   <button
