@@ -240,7 +240,7 @@ function App() {
 
   return (
     <ApiKeyGuard>
-      <div className="h-screen w-full flex flex-col bg-bw-white text-bw-black dark:bg-bw-black dark:text-bw-white transition-colors duration-300">
+      <div className="h-[100dvh] w-full flex flex-col bg-bw-white text-bw-black dark:bg-bw-black dark:text-bw-white transition-colors duration-300">
         <header className="h-16 short:h-12 flex items-center justify-between px-6 short:px-4 shrink-0 z-30 bg-bw-white dark:bg-bw-black">
           <div className="flex items-center gap-4">
             <span className="font-display text-3xl short:text-2xl pt-1">C</span>
@@ -514,7 +514,7 @@ function App() {
                 )}
               </div>
 
-              <div className="shrink-0 pt-4 pb-6 px-6 short:pt-2 short:pb-3 short:px-3 bg-bw-white dark:bg-bw-black z-50">
+              <div className="shrink-0 pt-4 pb-8 px-6 short:pt-2 short:pb-4 short:px-3 bg-bw-white dark:bg-bw-black z-50 transform-gpu">
                 <div className="space-y-3 short:space-y-1.5 border border-black dark:border-white">
                   {activeTab === 'create' ? (
                     viewingStyle ? (
