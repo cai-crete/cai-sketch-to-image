@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { analyzeSketch, generateBlueprintImage } from '../services/geminiService';
 import { parseAnalysisReport } from '../utils/reportParser';
 import { HistoryItem, AnalysisReport, ImageResolution } from '../types';
@@ -134,7 +134,7 @@ export const useBlueprintGeneration = ({ onComplete, onError }: UseBlueprintGene
                 timestamp: Date.now(),
                 originalImage: currentImage,
                 generatedImage: imageBase64,
-                prompt: userPrompt || prompt,
+                prompt: userPrompt,
                 resolution: resolution,
                 analysisReport: parsedAnalysis
             };

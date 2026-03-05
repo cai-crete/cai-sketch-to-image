@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { HistoryItem } from '../types';
-import { X, ArrowRight, Download, Trash2 } from 'lucide-react';
+import { X, Trash2, Maximize2 } from 'lucide-react';
 
 interface LibraryProps {
   items: HistoryItem[];
@@ -10,6 +10,8 @@ interface LibraryProps {
 }
 
 const Library: React.FC<LibraryProps> = ({ items, onSelect, onDelete, onClose }) => {
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+
   return (
     <div className="absolute inset-0 z-[60] bg-bw-white dark:bg-bw-black flex flex-col">
       {/* Library Header - Removed border-b */}
@@ -50,6 +52,41 @@ const Library: React.FC<LibraryProps> = ({ items, onSelect, onDelete, onClose })
                   />
                   {/* Hover Overlay - Dim only, no text */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
+
+                  {/* Expanded View Overlay */}
+                  {expandedItemId === item.id && (
+                    <div
+                      className="absolute inset-0 bg-white/95 dark:bg-black/95 z-10 p-4 flex flex-col overflow-y-auto custom-scrollbar"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex justify-end mb-2 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedItemId(null);
+                          }}
+                          className="hover:opacity-60 transition-opacity"
+                        >
+                          <X size={20} strokeWidth={1.5} />
+                        </button>
+                      </div>
+                      <div className="space-y-4 font-mono text-xs text-black dark:text-white cursor-text select-text" onClick={(e) => e.stopPropagation()}>
+                        <div>
+                          <p className="font-bold mb-1">▪ CODE</p>
+                          <p className="opacity-80 break-words">{item.prompt || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="font-bold mb-1">▪ Metacognitive Analysis</p>
+                          <p className="opacity-80 break-words font-sans text-sm">
+                            {item.analysisReport?.metacognitive.diagnosis || `[${item.mode}] / [STYLE ${item.styleMode}]`}
+                          </p>
+                          <p className="opacity-60 break-words mt-1 font-sans text-xs">
+                            {item.analysisReport?.metacognitive.reasoning}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Info Area */}
@@ -62,15 +99,26 @@ const Library: React.FC<LibraryProps> = ({ items, onSelect, onDelete, onClose })
                       {item.analysisReport?.metacognitive.diagnosis || item.prompt || "Untitled"}
                     </p>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(item.id);
-                    }}
-                    className="text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedItemId(expandedItemId === item.id ? null : item.id);
+                      }}
+                      className="text-gray-400 hover:text-black dark:hover:text-white transition-colors text-xs font-mono"
+                    >
+                      더보기
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(item.id);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

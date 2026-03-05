@@ -5,9 +5,13 @@ import ResultViewer from './components/ResultViewer';
 import Library from './components/Library';
 import { saveToLibrary, getLibrary, deleteFromLibrary } from './utils/storage';
 import { ImageResolution, HistoryItem, ThemeMode, AnalysisReport, BlueprintMode } from './types';
-import { X, Sun, Moon, Zap, ImageIcon, Camera, Trash2, History } from 'lucide-react';
+import { X, Sun, Moon, Zap, ImageIcon, Camera, Trash2, History, LogOut, User, ChevronRight, ChevronLeft, Lock } from 'lucide-react'; // Added LogOut, User, Lock
 import { metadata } from './constants';
 import { useBlueprintGeneration } from './hooks/useBlueprintGeneration';
+import { processAndDownloadImage } from './utils/downloadProcessor';
+import { useAuth } from './contexts/AuthContext';
+import { supabase } from './services/supabase';
+import { AuthScreen } from './components/AuthScreen';
 
 // Style Definitions constant remains the same
 const STYLE_DEFINITIONS = {
@@ -88,12 +92,13 @@ function App() {
 
   // Input State
   const [userPrompt, setUserPrompt] = useState('');
-  const [resolution, setResolution] = useState<ImageResolution>(ImageResolution.Res_2K);
+  const [resolution, setResolution] = useState<ImageResolution>(ImageResolution.Normal);
   const [aspectRatio, setAspectRatio] = useState<string>('4:3');
   const [vizMode, setVizMode] = useState<'CONCEPT' | 'DETAIL'>('CONCEPT');
   const [styleMode, setStyleMode] = useState<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'NONE'>('NONE');
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [hasCanvasContent, setHasCanvasContent] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Style View State
   const [viewingStyle, setViewingStyle] = useState<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'NONE' | null>(null);
@@ -104,6 +109,46 @@ function App() {
   const [theme, setTheme] = useState<ThemeMode>('light');
 
   const canvasRef = useRef<CanvasRef>(null);
+
+  // Auth & Token State
+  const { user, tier, counts, deductCount } = useAuth();
+
+  // Auth Screen State
+  const [showAuthScreen, setShowAuthScreen] = useState(false);
+  const [panelFlash, setPanelFlash] = useState(false);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+
+  // Mouse-tracking tooltip state
+  const [primedAction, setPrimedAction] = useState<string | null>(null);
+  const primedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTwoTapAction = (e: React.MouseEvent, actionId: string, actionFn: () => void) => {
+    if (!user || tier === 'ADMIN') {
+      actionFn();
+      return;
+    }
+
+    if (primedAction !== actionId) {
+      e.preventDefault();
+      e.stopPropagation();
+      setPrimedAction(actionId);
+
+      if (primedTimeoutRef.current) {
+        clearTimeout(primedTimeoutRef.current);
+      }
+
+      primedTimeoutRef.current = setTimeout(() => {
+        setPrimedAction((prev) => (prev === actionId ? null : prev));
+      }, 5000); // 5 seconds display for all devices
+      return;
+    }
+
+    if (primedTimeoutRef.current) {
+      clearTimeout(primedTimeoutRef.current);
+    }
+    setPrimedAction(null);
+    actionFn();
+  };
 
   // Custom Hook for Generation Logic
   const {
@@ -171,6 +216,18 @@ function App() {
   };
 
   const handleGenerateClick = () => {
+    if (!user) return; // Safeguard
+
+    // Check tokens before proceeding
+    if (counts <= 0 && tier !== 'ADMIN') {
+      alert("You have run out of Counts. Please upgrade or contact the administrator.");
+      return;
+    }
+
+    // Deduct count (only if not admin, handled internally by context)
+    const success = deductCount();
+    if (!success) return; // Failsafe
+
     generate(
       canvasRef,
       originalImage,
@@ -182,22 +239,46 @@ function App() {
     );
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (generatedImage) {
+      // Apply correct deduction for High (5) / Normal (1) quality on download
+      let deductionAmount = 0;
+      if (resolution === 'NORMAL QUALITY') deductionAmount = 1;
+      else if (resolution === 'HIGH QUALITY') deductionAmount = 5;
+
+      if (deductionAmount > 0) {
+        if (counts < deductionAmount && tier !== 'ADMIN') {
+          alert(`다운로드를 위한 Count가 부족합니다. (필요 Count: ${deductionAmount})`);
+          return;
+        }
+        const success = deductCount(deductionAmount);
+        if (!success) return;
+      }
+
+      setIsDownloading(true);
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
-      const fileName = `Sketch to Image Generated ${year}, ${month}, ${day} - ${hours}_${minutes}.png`;
+      const fileName = `CRE-TE_SKETCH to IMAGE_${year}, ${month}, ${day} - ${hours}${minutes}`;
 
-      const link = document.createElement('a');
-      link.href = generatedImage;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      try {
+        await processAndDownloadImage(generatedImage, aspectRatio, resolution, fileName);
+      } catch (error) {
+        console.error("Download processing failed:", error);
+        alert("Failed to process download image. Downloading original resolution.");
+        // Fallback to original
+        const link = document.createElement('a');
+        link.href = generatedImage;
+        link.download = `${fileName}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } finally {
+        setIsDownloading(false);
+      }
     }
   };
 
@@ -245,27 +326,61 @@ function App() {
           <div className="flex items-center gap-4">
             <span className="font-display text-3xl short:text-2xl pt-1">C</span>
             <h1
-              className="font-display text-[1.575rem] tracking-wide pt-1 cursor-pointer hover:opacity-60 transition-opacity"
+              className={`font-display text-[1.575rem] tracking-wide pt-1 cursor-pointer hover:opacity-60 transition-opacity ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
               onClick={handleReset}
             >
               {metadata.title.toUpperCase()}
             </h1>
           </div>
           <div className="flex items-center gap-8">
-            <button
-              onClick={() => setShowLibrary(true)}
-              disabled={isProcessing}
-              className={`font-display text-lg tracking-wide hover:opacity-60 transition-opacity pt-1 ${isProcessing ? 'opacity-30 cursor-not-allowed' : ''}`}
-            >
-              LIBRARY
-            </button>
+            <div className="flex items-center gap-4">
+              {user ? (
+                <>
+                  <div className="font-mono text-sm opacity-80 flex items-center gap-2">
+                    <User size={16} />
+                    <span>Count: {tier === 'VIP' || tier === 'CUSTOMER' || tier === 'TEST' ? `${counts} (${tier === 'VIP' ? 'VIP' : tier === 'CUSTOMER' ? 'Customer' : 'Test'})` : tier === 'ADMIN' ? '∞ (CRE-TE)' : counts}</span>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (isProcessing) return;
+                      await supabase.auth.signOut();
+                      handleReset();
+                    }}
+                    className={`hover:opacity-60 transition-opacity flex items-center gap-1 font-mono text-sm ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
+                    title="Logout"
+                    disabled={isProcessing}
+                  >
+                    <LogOut size={16} />
+                    <span className="hidden sm:inline">Logout</span>
+                  </button>
+                </>
+              ) : null}
+            </div>
+
+            {user && (
+              <button
+                onClick={() => setShowLibrary(true)}
+                disabled={isProcessing}
+                className={`font-display text-lg tracking-wide hover:opacity-60 transition-opacity pt-1 ${isProcessing ? 'opacity-30 cursor-not-allowed' : ''}`}
+              >
+                LIBRARY
+              </button>
+            )}
+            {!user && (
+              <button
+                onClick={() => setShowAuthScreen(true)}
+                className="font-display text-lg tracking-wide hover:opacity-60 transition-opacity pt-1"
+              >
+                Sign in
+              </button>
+            )}
             <button
               onClick={toggleTheme}
-              className="hover:opacity-60 transition-opacity"
+              disabled={isProcessing}
+              className={`hover:opacity-60 transition-opacity ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
-
           </div>
         </header>
 
@@ -284,7 +399,7 @@ function App() {
 
           <div className="relative bg-white dark:bg-black flex flex-col min-w-0 h-[30vh] landscape:h-auto landscape:flex-1">
             <div className="w-full h-full relative">
-              <div className={`w-full h-full ${activeTab === 'create' ? 'block' : 'hidden'}`}>
+              <div className={`w-full h-full ${activeTab === 'create' ? 'block' : 'hidden'} ${isProcessing ? 'pointer-events-none opacity-80' : ''}`}>
                 <CanvasBoard
                   ref={canvasRef}
                   onImageChange={setHasCanvasContent}
@@ -300,121 +415,108 @@ function App() {
               )}
             </div>
           </div>
-          {!showLibrary && (
-            <div className="w-full landscape:w-[320px] bg-bw-white dark:bg-bw-black flex flex-col z-[200] border-t landscape:border-t-0 landscape:border-l border-black/10 dark:border-white/10 relative flex-1 landscape:flex-none landscape:h-full overflow-hidden">
+          {!showLibrary && user && (
+            <div className={`w-full ${isRightPanelOpen ? 'landscape:w-[320px]' : 'landscape:w-0'} ${panelFlash ? 'bg-gray-100 dark:bg-gray-900 invert' : 'bg-bw-white dark:bg-bw-black'} flex flex-col z-[200] border-t landscape:border-t-0 ${isRightPanelOpen ? 'landscape:border-l' : ''} border-black/10 dark:border-white/10 relative flex-1 landscape:flex-none landscape:h-full transition-all duration-300`}>
+              {user && (
+                <button
+                  onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+                  disabled={isProcessing}
+                  className={`absolute top-1/2 -translate-y-1/2 -left-8 w-8 h-16 bg-bw-white dark:bg-bw-black border border-black/10 dark:border-white/10 dark:border-l-white/10 border-r-0 flex items-center justify-center z-[210] rounded-l-md hidden landscape:flex ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
+                >
+                  {isRightPanelOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
+              )}
               {isProcessing && (
-                <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-40 pointer-events-none" />
+                <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-40 pointer-events-auto" />
               )}
 
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 short:p-3 flex flex-col gap-5 short:gap-3">
+              <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 flex flex-col gap-5 ${isRightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-200 delay-100`}>
                 {/* Conditional Rendering based on Tab */}
                 {activeTab === 'create' ? (
-                  <div className="flex flex-col gap-5 short:gap-3">
+                  <>
                     {/*
                     CONTENT AREA
                     Swaps between Main Form and Style View
-                */}
+                    */}
                     {viewingStyle ? (
                       /* STYLE VIEW CONTENT */
-                      <>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="font-display text-xl block">CRE-TE STYLE</label>
-                            <button
-                              onClick={() => setViewingStyle(null)}
-                              className="hover:opacity-60 transition-opacity"
-                            >
-                              <X size={24} />
-                            </button>
-                          </div>
-                          <div className="w-full flex-1 px-0 py-0 font-mono text-xs leading-relaxed bg-transparent border-0 focus:outline-none resize-none overflow-y-auto custom-scrollbar min-h-0">
-                            {viewingStyle && STYLE_DEFINITIONS[viewingStyle] && (
-                              <div className="space-y-4">
-                                <div>
-                                  <p className="font-bold text-xs mb-1 text-black dark:text-white uppercase">
-                                    {STYLE_DEFINITIONS[viewingStyle].architect}
-                                  </p>
-                                </div>
+                      <div className="flex-1 flex flex-col min-h-0 space-y-3">
+                        <div className="flex items-center justify-between shrink-0">
+                          <label className="font-display text-xl block">CRE-TE STYLE</label>
+                          <button
+                            onClick={() => setViewingStyle(null)}
+                            className="hover:opacity-60 transition-opacity"
+                          >
+                            <X size={24} />
+                          </button>
+                        </div>
+                        <div className="w-full flex-1 px-0 py-0 font-mono text-xs leading-relaxed bg-transparent border-0 focus:outline-none resize-none overflow-y-auto custom-scrollbar min-h-0">
+                          {viewingStyle && STYLE_DEFINITIONS[viewingStyle] && (
+                            <div className="space-y-4">
+                              <div>
+                                <p className="font-bold text-xs mb-1 text-black dark:text-white uppercase">
+                                  {STYLE_DEFINITIONS[viewingStyle].architect}
+                                </p>
+                              </div>
 
-                                <div>
-                                  <p className="font-bold opacity-70 mb-2">STYLE</p>
-                                  <div className="space-y-3">
-                                    {STYLE_DEFINITIONS[viewingStyle].stylePoints.map((point, i) => (
-                                      <div key={i}>
-                                        <p className="font-bold opacity-80 mb-0.5">* {point.title}</p>
-                                        <p className="opacity-80 pl-2">{point.desc}</p>
-                                      </div>
-                                    ))}
-                                  </div>
+                              <div>
+                                <p className="font-bold opacity-70 mb-2">STYLE</p>
+                                <div className="space-y-3">
+                                  {STYLE_DEFINITIONS[viewingStyle].stylePoints.map((point, i) => (
+                                    <div key={i}>
+                                      <p className="font-bold opacity-80 mb-0.5">* {point.title}</p>
+                                      <p className="opacity-80 pl-2">{point.desc}</p>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
-                      </>
+                      </div>
                     ) : (
                       /* MAIN FORM CONTENT */
                       <>
-                        <div className="space-y-3 short:space-y-1.5">
-                          <label className="font-display text-xl short:text-lg block">CODE</label>
-                          <textarea
-                            className="w-full h-24 short:h-20 p-3 short:p-2 font-mono text-xs bg-transparent border border-black dark:border-white focus:outline-none resize-none placeholder-gray-400 rounded-none"
-                            placeholder="Describe materials, lighting..."
-                            value={userPrompt}
-                            onChange={(e) => setUserPrompt(e.target.value)}
-                            disabled={isProcessing}
-                          />
-                        </div>
-
-                        <div className="space-y-3 short:space-y-1.5">
-                          <label className="font-display text-xl short:text-lg block">RESOLUTION</label>
-                          <div className="grid grid-cols-3 gap-0 border border-black dark:border-white">
-                            {Object.values(ImageResolution).map((res, idx) => (
-                              <button
-                                key={res}
-                                onClick={() => setResolution(res)}
-                                disabled={isProcessing}
-                                className={`py-2 short:py-1 font-display text-lg short:text-base transition-all ${resolution === res
-                                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                                  : 'bg-transparent hover:bg-gray-100 dark:hover:bg-white dark:hover:text-black'
-                                  } ${idx !== 0 ? 'border-l border-black dark:border-white' : ''}`}
-                              >
-                                {res}
+                        <div className="flex-1 flex flex-col min-h-0 space-y-3">
+                          <div className="space-y-3 flex-1 flex flex-col min-h-0">
+                            <div className="flex items-center justify-between">
+                              <label className="font-display text-xl block">CODE</label>
+                              <button className="invisible pointer-events-none" tabIndex={-1}>
+                                <X size={24} strokeWidth={1.5} />
                               </button>
-                            ))}
+                            </div>
+                            <textarea
+                              className="w-full flex-1 p-3 font-mono text-xs bg-transparent border border-black dark:border-white focus:outline-none resize-none placeholder-gray-400 rounded-none min-h-[50%]"
+                              placeholder="Describe materials, lighting..."
+                              value={userPrompt}
+                              onChange={(e) => setUserPrompt(e.target.value)}
+                              disabled={isProcessing}
+                            />
                           </div>
                         </div>
 
-                        <div className="space-y-3 short:space-y-1.5">
-                          <label className="font-display text-xl short:text-lg block">ASPECT RATIO</label>
-                          <div className="grid grid-cols-3 gap-0 border border-black dark:border-white">
-                            {['1:1', '4:3', '16:9'].map((ratio, idx) => (
-                              <button
-                                key={ratio}
-                                onClick={() => setAspectRatio(ratio)}
-                                disabled={isProcessing}
-                                className={`py-2 short:py-1 font-display text-lg short:text-base transition-all ${aspectRatio === ratio
-                                  ? 'bg-black text-white dark:bg-white dark:text-black'
-                                  : 'bg-transparent hover:bg-gray-100 dark:hover:bg-white dark:hover:text-black'
-                                  } ${idx !== 0 ? 'border-l border-black dark:border-white' : ''}`}
-                              >
-                                {ratio}
-                              </button>
-                            ))}
+                        <div className="space-y-3 shrink-0">
+                          <div className="relative flex justify-between items-end">
+                            <label className="font-display text-xl block">MODE</label>
+                            {(primedAction === 'mode-CONCEPT' || primedAction === 'mode-DETAIL') && (
+                              <span className="absolute bottom-1 right-0 text-[11px] font-mono opacity-80 animate-fade-in text-right pointer-events-none">
+                                {primedAction === 'mode-CONCEPT' ? '형태를 제안합니다.' : '형태를 보존합니다.'}
+                              </span>
+                            )}
                           </div>
-                        </div>
-
-                        <div className="space-y-3 short:space-y-1.5">
-                          <label className="font-display text-xl short:text-lg block">MODE</label>
                           <div className="grid grid-cols-2 gap-0 border border-black dark:border-white">
                             {['CONCEPT', 'DETAIL'].map((mode, idx) => (
                               <button
                                 key={mode}
-                                onClick={() => setVizMode(mode as 'CONCEPT' | 'DETAIL')}
+                                onClick={(e) => handleTwoTapAction(
+                                  e,
+                                  `mode-${mode}`,
+                                  () => setVizMode(mode as 'CONCEPT' | 'DETAIL')
+                                )}
                                 disabled={isProcessing}
-                                className={`py-2 short:py-1 font-display text-lg short:text-base transition-all ${vizMode === mode
+                                className={`py-2 font-display text-lg transition-all ${vizMode === mode
                                   ? 'bg-black text-white dark:bg-white dark:text-black'
-                                  : 'bg-transparent hover:bg-gray-100 dark:hover:bg-white dark:hover:text-black'
+                                  : 'bg-transparent'
                                   } ${idx !== 0 ? 'border-l border-black dark:border-white' : ''}`}
                               >
                                 {mode}
@@ -423,19 +525,19 @@ function App() {
                           </div>
                         </div>
 
-                        <div className="space-y-3 short:space-y-1.5">
-                          <label className="font-display text-xl short:text-lg block">CRE-TE STYLE</label>
+                        <div className="space-y-3 shrink-0">
+                          <label className="font-display text-xl block">CRE-TE STYLE</label>
                           <div className="grid grid-cols-4 gap-[1px] bg-black border border-black dark:border-white dark:bg-white overflow-hidden">
                             {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'NONE'].map((style, idx) => (
                               <button
                                 key={style}
                                 onClick={() => {
                                   handleStyleSelect(style as any);
-                                  // Also clear previous results via hook if needed, but styling just sets mode here
-                                  resetGeneration(); // Clear result when changing style in Create tab
+                                  resetGeneration();
                                 }}
+                                disabled={isProcessing}
                                 className={`
-                                h-12 flex items-center justify-center font-display text-lg short:text-base transition-colors
+                                h-12 flex items-center justify-center font-display text-lg transition-colors
                                 ${styleMode === style
                                     ? 'bg-black text-white dark:bg-white dark:text-black'
                                     : 'bg-white text-black hover:bg-gray-100 dark:bg-black dark:text-white dark:hover:bg-gray-800'
@@ -449,59 +551,112 @@ function App() {
                         </div>
                       </>
                     )}
-
-
-
-
-                  </div>
+                  </>
                 ) : (
                   /* Result View - Analysis Report Sidebar */
                   <>
                     {analysisReport ? (
                       <>
-                        {/* LOGIC & ANALYSIS */}
-                        <div className="space-y-3 flex-1 flex flex-col min-h-0">
-                          <div className="flex items-center justify-between">
-                            <label className="font-display text-xl block">LOGIC & ANALYSIS</label>
-                            <button
-                              onClick={() => setShowLibrary(true)}
-                              className="hover:opacity-60 transition-opacity"
-                            >
-                              <X size={24} strokeWidth={1.5} />
-                            </button>
+                        <div className="flex-1 flex flex-col min-h-0">
+                          <div className="flex-[0.9] flex flex-col min-h-0 space-y-3">
+                            {/* LOGIC & ANALYSIS */}
+                            <div className="space-y-3 flex-1 flex flex-col min-h-0">
+                              <div className="flex items-center justify-between">
+                                <label className="font-display text-xl block">LOGIC & ANALYSIS</label>
+                                <button
+                                  onClick={() => setShowLibrary(true)}
+                                  className="hover:opacity-60 transition-opacity"
+                                >
+                                  <X size={24} strokeWidth={1.5} />
+                                </button>
+                              </div>
+                              <div className="border border-black dark:border-white p-3 font-mono text-xs space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+                                <p className="font-bold">▪ CODE</p>
+                                {userPrompt.trim() ? (
+                                  <p className="opacity-80 pb-2">{userPrompt}</p>
+                                ) : null}
+
+                                <p className="font-bold mt-2">▪ Metacognitive Analysis</p>
+                                <p className="opacity-80 text-[11px] font-sans">{analysisReport.metacognitive.diagnosis}</p>
+                                <p className="opacity-60 text-[11px] font-sans">{analysisReport.metacognitive.reasoning}</p>
+
+                                <p className="font-bold mt-2">▪ Spatial & Logic Decoding</p>
+                                <p className="opacity-80">Geometry: {analysisReport.spatial.geometry}</p>
+                                <p className="opacity-80">Material: {analysisReport.spatial.materiality}</p>
+                              </div>
+                            </div>
+
+                            {/* EDIT BUTTON MOVED HERE */}
+                            <div className="relative">
+                              <button
+                                onClick={(e) => handleTwoTapAction(e, 'edit', () => {
+                                  if (user && counts <= 0 && tier !== 'ADMIN') {
+                                    alert("You have run out of Counts. Please upgrade or contact the administrator.");
+                                    return;
+                                  }
+                                  if (user && !deductCount()) return;
+                                  handleEdit();
+                                })}
+                                className="w-full py-2 font-display text-lg tracking-widest bg-black text-white dark:bg-white dark:text-black transition-opacity relative z-50 shrink-0 border border-black dark:border-white"
+                              >
+                                <span className="pt-1">EDIT</span>
+                              </button>
+                              {primedAction === 'edit' && <div className="absolute top-full mt-1 left-0 text-[11px] font-mono text-left opacity-80 animate-fade-in pointer-events-none">COUNT 1회 차감됩니다.</div>}
+                            </div>
                           </div>
-                          <div className="border border-black dark:border-white p-3 font-mono text-xs space-y-2 flex-1 overflow-y-auto">
-                            <p className="font-bold">▪ Metacognitive Analysis</p>
-                            <p className="opacity-80">{analysisReport.metacognitive.diagnosis}</p>
-                            <p className="opacity-60 text-[10px]">{analysisReport.metacognitive.reasoning}</p>
+                          <div className="flex-[0.1]" />
+                        </div>
 
-
-                            <p className="font-bold mt-2">▪ Spatial & Logic Decoding</p>
-                            <p className="opacity-80">Geometry: {analysisReport.spatial.geometry}</p>
-                            <p className="opacity-80">Material: {analysisReport.spatial.materiality}</p>
+                        {/* RESOLUTION */}
+                        <div className="space-y-3 shrink-0">
+                          <div className="relative flex justify-between items-end">
+                            <label className="font-display text-xl block">RESOLUTION</label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-0 border border-black dark:border-white">
+                            {Object.values(ImageResolution).map((res, idx) => {
+                              const isRestricted = res === ImageResolution.High && tier !== 'ADMIN';
+                              return (
+                                <button
+                                  key={res}
+                                  onClick={() => {
+                                    if (isRestricted) return;
+                                    if (resolution === res) return;
+                                    setResolution(res);
+                                  }}
+                                  disabled={isProcessing || isRestricted}
+                                  className={`py-2 font-display text-lg transition-all relative flex items-center justify-center ${resolution === res && !isRestricted
+                                    ? 'bg-black text-white dark:bg-white dark:text-black'
+                                    : 'bg-transparent'
+                                    } ${idx !== 0 ? 'border-l border-black dark:border-white' : ''} ${isRestricted ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                >
+                                  {res}
+                                  {isRestricted && (
+                                    <Lock size={14} className="absolute top-2 right-2 opacity-50" />
+                                  )}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
 
-                        {/* VERIFICATION & OPTIONS */}
-                        {/* VERIFICATION & OPTIONS */}
-                        <div className="space-y-3 flex-1 flex flex-col min-h-0">
-                          <label className="font-display text-xl block">VERIFICATION & OPTIONS</label>
-                          <div className="border border-black dark:border-white p-3 font-mono text-xs space-y-2 flex-1 overflow-y-auto">
-                            <p className="font-bold">▪ Iterative Refinement</p>
-                            <ul className="list-disc pl-3 opacity-80">
-                              <li>{analysisReport.refinement.optionA}</li>
-                              <li>{analysisReport.refinement.optionB}</li>
-                            </ul>
-                            <p className="font-bold mt-2">▪ Reality Check</p>
-                            <p className="opacity-80">{analysisReport.verification.imperfection}</p>
-                          </div>
-                        </div>
-
-                        {/* EXECUTION CODE */}
-                        <div className="space-y-3 flex-1 flex flex-col min-h-0">
-                          <label className="font-display text-xl block">EXECUTION CODE</label>
-                          <div className="border border-black dark:border-white p-3 font-mono text-[10px] overflow-y-auto flex-1 whitespace-pre-wrap">
-                            {analysisReport.execution.prompt}
+                        {/* ASPECT RATIO */}
+                        <div className="space-y-3 shrink-0">
+                          <label className="font-display text-xl block">ASPECT RATIO</label>
+                          <div className="grid grid-cols-3 gap-0 border border-black dark:border-white">
+                            {['1:1', '4:3', '16:9'].map((ratio, idx) => (
+                              <button
+                                key={ratio}
+                                onClick={() => setAspectRatio(ratio)}
+                                disabled={isProcessing}
+                                className={`py-2 font-display text-lg transition-all ${aspectRatio === ratio
+                                  ? 'bg-black text-white dark:bg-white dark:text-black'
+                                  : 'bg-transparent'
+                                  } ${idx !== 0 ? 'border-l border-black dark:border-white' : ''}`}
+                              >
+                                {ratio}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       </>
@@ -514,47 +669,61 @@ function App() {
                 )}
               </div>
 
-              <div className="shrink-0 pt-4 pb-8 px-6 short:pt-2 short:pb-4 short:px-3 bg-bw-white dark:bg-bw-black z-50 transform-gpu">
-                <div className="space-y-3 short:space-y-1.5 border border-black dark:border-white">
+              <div className={`shrink-0 pt-4 pb-8 px-6 bg-bw-white dark:bg-bw-black z-50 transform-gpu ${isRightPanelOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-200 delay-100`}>
+                <div className="space-y-3">
                   {activeTab === 'create' ? (
-                    viewingStyle ? (
-                      <button
-                        onClick={() => {
-                          setStyleMode(viewingStyle);
-                          setViewingStyle(null);
-                        }}
-                        className="w-full py-3 short:py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all relative z-50 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-                      >
-                        <span className="pt-1">SELECT</span>
-                      </button>
-                    ) : (
-                      isProcessing ? (
+                    !user ? null : (
+                      viewingStyle ? (
                         <button
-                          onClick={cancel}
-                          className="w-full py-3 short:py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black bg-transparent text-black dark:text-white z-[201] relative"
+                          onClick={() => {
+                            setStyleMode(viewingStyle);
+                            setViewingStyle(null);
+                          }}
+                          className="w-full py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all relative z-50 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black border border-black dark:border-white"
                         >
-                          <span className="pt-1">CANCEL</span>
+                          <span className="pt-1">SELECT</span>
                         </button>
                       ) : (
-                        <button
-                          onClick={handleGenerateClick}
-                          className="w-full py-3 short:py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all relative z-50 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black"
-                        >
-                          <span className="pt-1">GENERATE</span>
-                        </button>
+                        <div className="mt-8 relative">
+                          {primedAction === 'generate' && <div className="absolute bottom-full mb-1 left-0 text-[11px] font-mono text-left opacity-80 animate-fade-in pointer-events-none">COUNT 1회 차감됩니다.</div>}
+                          {isProcessing ? (
+                            <button
+                              onClick={cancel}
+                              className="w-full py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all border border-black dark:border-white bg-transparent text-black dark:text-white z-[201] relative"
+                            >
+                              <span className="pt-1">CANCEL</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handleTwoTapAction(e, 'generate', handleGenerateClick)}
+                              className="w-full py-2 font-display text-lg tracking-widest flex items-center justify-center gap-3 transition-all relative z-50 border border-black dark:border-white"
+                            >
+                              <span className="pt-1">GENERATE</span>
+                            </button>
+                          )}
+                        </div>
                       )
                     )
                   ) : (
-                    <button
-                      onClick={handleEdit}
-                      className="w-full py-2 font-display text-lg tracking-widest bg-black text-white dark:bg-white dark:text-black flex items-center justify-center gap-2 hover:opacity-80 transition-opacity relative z-50"
-                    >
-                      <span className="pt-1">EDIT</span>
-                    </button>
+                    <div className="mt-8 relative">
+                      {primedAction === 'download' && <div className="absolute bottom-full mb-1 left-0 text-[11px] font-mono text-left opacity-80 animate-fade-in pointer-events-none">COUNT {resolution === 'NORMAL QUALITY' ? '1' : '5'}회 차감됩니다.</div>}
+                      {/* DOWNLOAD BUTTON */}
+                      <button
+                        onClick={(e) => handleTwoTapAction(
+                          e,
+                          'download',
+                          handleDownload
+                        )}
+                        disabled={isDownloading || isProcessing}
+                        className="w-full py-2 font-display text-lg tracking-widest bg-black text-white dark:bg-white dark:text-black flex items-center justify-center gap-2 transition-opacity relative z-50 disabled:opacity-50"
+                      >
+                        <span className="pt-1">{isDownloading ? 'PLEASE WAIT' : 'DOWNLOAD'}</span>
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                <div className="mt-4 short:mt-2 pt-2 border-t border-black/10 dark:border-white/10 text-center flex justify-center">
+                <div className="mt-4 pt-2 border-t border-black/10 dark:border-white/10 text-center flex justify-center">
                   <p className="font-mono text-[9px] opacity-40 tracking-widest whitespace-nowrap">
                     © CRETE CO.,LTD. 2026. ALL RIGHTS RESERVED.
                   </p>
@@ -588,6 +757,10 @@ function App() {
           )}
         </main>
       </div>
+
+      {showAuthScreen && (
+        <AuthScreen onClose={() => setShowAuthScreen(false)} />
+      )}
     </ApiKeyGuard>
   );
 }

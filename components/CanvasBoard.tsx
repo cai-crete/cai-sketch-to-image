@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { Pen, Eraser, Trash2, Undo, ImageIcon, Camera, X } from 'lucide-react';
+import { Pen, Eraser, Trash2, Undo, ImageIcon, Camera, X, Type, ArrowRight, MousePointer2, Move, Settings } from 'lucide-react';
 
 interface CanvasBoardProps {
   onImageChange: (hasImage: boolean) => void;
@@ -11,8 +11,23 @@ export interface CanvasRef {
   loadImage: (src: string) => void;
 }
 
+export type Point = { x: number, y: number };
+export type Stroke = {
+  id: string;
+  tool: 'pen' | 'eraser' | 'text' | 'arrow';
+  eraserMode?: 'pixel' | 'stroke';
+  points: Point[];
+  color: string;
+  width: number;
+  text?: string;
+  fontSize?: number;
+  arrowStyle?: 'solid' | 'dotted';
+};
+
 const COLORS = ['#FFD700', '#000000', '#FF0000', '#0000FF', '#008000', '#FFFFFF'];
-const ERASER_SIZES = [10, 20, 30, 50, 70, 100];
+const ERASER_SIZES = [10, 20, 30, 50, 80];
+const PEN_SIZES = [0.5, 1, 2, 4, 6];
+const TEXT_SIZES = [20, 32, 48, 64, 80];
 
 const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, ref) => {
   const bgCanvasRef = useRef<HTMLCanvasElement>(null); // Layer 0: Background (Image/White)
@@ -20,12 +35,34 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [isDrawing, setIsDrawing] = useState(false);
-  const [tool, setTool] = useState<'pen' | 'eraser' | null>(null);
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState(true);
+  const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
+  const [isEraserMenuOpen, setIsEraserMenuOpen] = useState(false);
+  const [isTextMenuOpen, setIsTextMenuOpen] = useState(false);
+  const [isArrowMenuOpen, setIsArrowMenuOpen] = useState(false);
+  const [tool, setTool] = useState<'pen' | 'eraser' | 'text' | 'arrow' | 'move' | null>(null);
+  const [eraserMode, setEraserMode] = useState<'pixel' | 'stroke'>('pixel');
+  const [arrowStyle, setArrowStyle] = useState<'solid' | 'dotted'>('solid');
   const [activeColor, setActiveColor] = useState('#000000');
-  const [eraserSize, setEraserSize] = useState(30);
+  const [eraserLevel, setEraserLevel] = useState(3);
+  const [penLevel, setPenLevel] = useState(3);
+  const [arrowLevel, setArrowLevel] = useState(3);
+  const [textLevel, setTextLevel] = useState(2);
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [history, setHistory] = useState<ImageData[]>([]);
+
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const strokesRef = useRef<Stroke[]>([]);
+  const [history, setHistory] = useState<Stroke[][]>([]);
+  const currentStrokeRef = useRef<Stroke | null>(null);
+
+  const [textInput, setTextInput] = useState<{ visible: boolean; x: number; y: number; text: string }>({
+    visible: false, x: 0, y: 0, text: ''
+  });
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const [selectedMoveId, setSelectedMoveId] = useState<string | null>(null);
+  const moveStartPosRef = useRef<{ x: number, y: number } | null>(null);
 
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [showCursor, setShowCursor] = useState(false);
@@ -33,6 +70,9 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
 
   // Viewport transformation state (for Zoom/Pan)
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  const [fitTransform, setFitTransform] = useState({ scale: 1, offsetX: 0, offsetY: 0 });
+  const [baseSize, setBaseSize] = useState({ w: 0, h: 0 });
+  const baseSizeRef = useRef({ w: 0, h: 0 });
   const [isPanning, setIsPanning] = useState(false);
 
   // Touch/Pinch helper refs
@@ -79,6 +119,94 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
     }
   }, [backgroundImage]);
 
+  // Helper: Redraw all strokes
+  const redrawAllStrokes = useCallback((strokeList: Stroke[]) => {
+    const drawCanvas = drawCanvasRef.current;
+    if (!drawCanvas) return;
+    const ctx = drawCanvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    strokeList.forEach(stroke => {
+      if (stroke.points.length === 0) return;
+
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+      if (stroke.tool === 'eraser') {
+        if (stroke.eraserMode === 'pixel') {
+          for (let i = 1; i < stroke.points.length; i++) {
+            ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+          }
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.lineWidth = stroke.width;
+          ctx.stroke();
+        }
+      }
+      if (stroke.id === selectedMoveId) {
+        ctx.globalAlpha = 0.8;
+      } else {
+        ctx.globalAlpha = 1.0;
+      }
+
+      if (stroke.tool === 'text' && stroke.text) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = stroke.color;
+        const fontSize = stroke.fontSize || TEXT_SIZES[textLevel - 1]; // Fallback to current level if no fontSize recorded
+        ctx.font = `${fontSize}px Inter, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const lines = stroke.text.split('\n');
+        lines.forEach((line, index) => {
+          ctx.fillText(line, stroke.points[0].x, stroke.points[0].y + (index * (fontSize * 1.2)));
+        });
+      } else if (stroke.tool === 'arrow' && stroke.points.length >= 2) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        if (stroke.arrowStyle === 'dotted') {
+          ctx.setLineDash([10, 10]);
+        } else {
+          ctx.setLineDash([]);
+        }
+
+        const pt1 = stroke.points[0];
+        const pt2 = stroke.points[stroke.points.length - 1];
+
+        ctx.lineTo(pt2.x, pt2.y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        const angle = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x);
+        const headlen = 15;
+        ctx.beginPath();
+        ctx.moveTo(pt2.x, pt2.y);
+        ctx.lineTo(pt2.x - headlen * Math.cos(angle - Math.PI / 6), pt2.y - headlen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(pt2.x, pt2.y);
+        ctx.lineTo(pt2.x - headlen * Math.cos(angle + Math.PI / 6), pt2.y - headlen * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (stroke.tool !== 'eraser') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.width;
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1.0;
+    });
+  }, []);
+
+  // Effect: Redraw when strokes array changes
+  useEffect(() => {
+    redrawAllStrokes(strokes);
+  }, [strokes, redrawAllStrokes]);
+
   // Helper: Handle Resizing (Layout)
   const handleResize = useCallback(() => {
     const bgCanvas = bgCanvasRef.current;
@@ -90,35 +218,84 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
     const { clientWidth, clientHeight } = container;
     if (clientWidth === 0 || clientHeight === 0) return;
 
-    // Only update and clear if dimensions actually changed
-    if (bgCanvas.width !== clientWidth || bgCanvas.height !== clientHeight) {
-      // Save current drawing
-      const drawCtx = drawCanvas.getContext('2d');
-      let savedData: ImageData | null = null;
-      if (drawCtx && drawCanvas.width > 0 && drawCanvas.height > 0) {
-        savedData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
-      }
+    let baseW = baseSizeRef.current.w;
+    let baseH = baseSizeRef.current.h;
 
-      bgCanvas.width = clientWidth;
-      bgCanvas.height = clientHeight;
-      drawCanvas.width = clientWidth;
-      drawCanvas.height = clientHeight;
-
-      const newDrawCtx = drawCanvas.getContext('2d');
-      if (newDrawCtx) {
-        newDrawCtx.lineCap = 'round';
-        newDrawCtx.lineJoin = 'round';
-        if (savedData) {
-          newDrawCtx.putImageData(savedData, 0, 0);
-        }
-      }
-
-      // Re-paint background after resize
-      paintBackground();
+    // 1. Image Mode: Fixed aspect ratio with letterboxing
+    if (backgroundImage) {
+      if (baseW === 0 || baseH === 0) return;
+      const fit = Math.min(clientWidth / baseW, clientHeight / baseH);
+      const offsetX = (clientWidth - baseW * fit) / 2;
+      const offsetY = (clientHeight - baseH * fit) / 2;
+      setFitTransform({ scale: fit, offsetX, offsetY });
+      return;
     }
-  }, [paintBackground]);
 
-  // Effect: Initialization & Resize Listener (Optimized with rAF)
+    // 2. Fluid Mode (Default): Canvas size exactly matches container size
+    if (baseW === 0 || baseH === 0) {
+      // Initial Setup
+      baseW = clientWidth;
+      baseH = clientHeight;
+      bgCanvas.width = baseW;
+      bgCanvas.height = baseH;
+      drawCanvas.width = baseW;
+      drawCanvas.height = baseH;
+      baseSizeRef.current = { w: baseW, h: baseH };
+      setBaseSize({ w: baseW, h: baseH });
+
+      paintBackground();
+      redrawAllStrokes(strokesRef.current);
+    } else if (baseW !== clientWidth || baseH !== clientHeight) {
+      // Window resized / Panel toggled: dynamically resize and shift strokes
+      const dx = (clientWidth - baseW) / 2;
+      const dy = (clientHeight - baseH) / 2;
+
+      baseW = clientWidth;
+      baseH = clientHeight;
+      bgCanvas.width = baseW;
+      bgCanvas.height = baseH;
+      drawCanvas.width = baseW;
+      drawCanvas.height = baseH;
+      baseSizeRef.current = { w: baseW, h: baseH };
+      setBaseSize({ w: baseW, h: baseH });
+
+      if (strokesRef.current.length > 0) {
+        const shiftedStrokes = strokesRef.current.map(stroke => ({
+          ...stroke,
+          points: stroke.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+        }));
+        setStrokes(shiftedStrokes);
+        strokesRef.current = shiftedStrokes;
+      }
+
+      setHistory(prevHistory => prevHistory.map(hist =>
+        hist.map(stroke => ({
+          ...stroke,
+          points: stroke.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+        }))
+      ));
+
+      paintBackground();
+      redrawAllStrokes(strokesRef.current);
+    }
+
+    setFitTransform({ scale: 1, offsetX: 0, offsetY: 0 });
+  }, [paintBackground, redrawAllStrokes, backgroundImage]);
+
+  // Sync strokes to ref to avoid dependency cycles
+  useEffect(() => {
+    strokesRef.current = strokes;
+  }, [strokes]);
+
+  // Auto-resize when baseSize changes (e.g. image loaded)
+  useEffect(() => {
+    if (baseSize.w > 0 && baseSize.h > 0) {
+      handleResize();
+    }
+  }, [baseSize.w, baseSize.h, handleResize]);
+
+  // Effect: Initialization & Resize Listener (Optimized with ResizeObserver to catch layout changes)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const animationFrameId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -129,11 +306,20 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       });
     };
 
-    handleResize(); // Initial call
+    if (containerRef.current) {
+      resizeObserverRef.current = new ResizeObserver(onResize);
+      resizeObserverRef.current.observe(containerRef.current);
+    }
+
+    // Also keep window resize as fallback
     window.addEventListener('resize', onResize);
+    handleResize(); // Initial call
 
     return () => {
       window.removeEventListener('resize', onResize);
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, [handleResize]);
@@ -208,17 +394,116 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       const drawCanvas = drawCanvasRef.current;
       if (!bgCanvas || !drawCanvas) return null;
 
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = bgCanvas.width;
-      tempCanvas.height = bgCanvas.height;
-      const ctx = tempCanvas.getContext('2d');
+      // 1. Compute expanded bounding box based on strokes
+      const centerX = bgCanvas.width / 2;
+      const centerY = bgCanvas.height / 2;
+      let maxDistX = bgCanvas.width / 2;
+      let maxDistY = bgCanvas.height / 2;
 
-      if (ctx) {
-        ctx.drawImage(bgCanvas, 0, 0);
-        ctx.drawImage(drawCanvas, 0, 0);
-        return tempCanvas.toDataURL('image/png');
+      strokesRef.current.forEach(s => {
+        s.points.forEach(p => {
+          const padding = (s.width || 10) / 2 + 5;
+          const distFromCenterX = Math.abs(p.x - centerX) + padding;
+          const distFromCenterY = Math.abs(p.y - centerY) + padding;
+          if (distFromCenterX > maxDistX) maxDistX = distFromCenterX;
+          if (distFromCenterY > maxDistY) maxDistY = distFromCenterY;
+        });
+      });
+
+      const exportW = Math.ceil(maxDistX * 2);
+      const exportH = Math.ceil(maxDistY * 2);
+      const offsetX = (exportW - bgCanvas.width) / 2;
+      const offsetY = (exportH - bgCanvas.height) / 2;
+
+      // 2. Prepare Background (White + Optional backgroundImage)
+      const tempBgCanvas = document.createElement('canvas');
+      tempBgCanvas.width = exportW;
+      tempBgCanvas.height = exportH;
+      const bgCtx = tempBgCanvas.getContext('2d');
+      if (!bgCtx) return null;
+
+      bgCtx.fillStyle = '#FFFFFF';
+      bgCtx.fillRect(0, 0, exportW, exportH);
+      if (backgroundImage) {
+        bgCtx.drawImage(bgCanvas, offsetX, offsetY);
       }
-      return null;
+
+      // 3. Prepare Draw/Stroke layer (Transparent)
+      const tempDrawCanvas = document.createElement('canvas');
+      tempDrawCanvas.width = exportW;
+      tempDrawCanvas.height = exportH;
+      const drawCtx = tempDrawCanvas.getContext('2d');
+      if (!drawCtx) return null;
+
+      drawCtx.translate(offsetX, offsetY);
+      drawCtx.lineCap = 'round';
+      drawCtx.lineJoin = 'round';
+
+      strokesRef.current.forEach(stroke => {
+        if (stroke.points.length === 0) return;
+
+        drawCtx.beginPath();
+        drawCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+        if (stroke.tool === 'eraser') {
+          if (stroke.eraserMode === 'pixel') {
+            for (let i = 1; i < stroke.points.length; i++) {
+              drawCtx.lineTo(stroke.points[i].x, stroke.points[i].y);
+            }
+            drawCtx.globalCompositeOperation = 'destination-out';
+            drawCtx.lineWidth = stroke.width || 10;
+            drawCtx.stroke();
+          }
+        } else if (stroke.tool === 'text' && stroke.text) {
+          drawCtx.globalCompositeOperation = 'source-over';
+          drawCtx.fillStyle = stroke.color || '#000000';
+          const fontSize = stroke.fontSize || 27;
+          drawCtx.font = `${fontSize}px Inter, sans-serif`;
+          drawCtx.textAlign = 'left';
+          drawCtx.textBaseline = 'top';
+          const lines = stroke.text.split('\n');
+          lines.forEach((line, index) => {
+            drawCtx.fillText(line, stroke.points[0].x, stroke.points[0].y + (index * (fontSize * 1.2)));
+          });
+        } else if (stroke.tool === 'arrow' && stroke.points.length >= 2) {
+          drawCtx.globalCompositeOperation = 'source-over';
+          drawCtx.strokeStyle = stroke.color || '#000000';
+          drawCtx.lineWidth = stroke.width || 2;
+          if (stroke.arrowStyle === 'dotted') {
+            drawCtx.setLineDash([10, 10]);
+          } else {
+            drawCtx.setLineDash([]);
+          }
+
+          const pt1 = stroke.points[0];
+          const pt2 = stroke.points[stroke.points.length - 1];
+          drawCtx.lineTo(pt2.x, pt2.y);
+          drawCtx.stroke();
+
+          drawCtx.setLineDash([]);
+          const angle = Math.atan2(pt2.y - pt1.y, pt2.x - pt1.x);
+          const headlen = 15;
+          drawCtx.beginPath();
+          drawCtx.moveTo(pt2.x, pt2.y);
+          drawCtx.lineTo(pt2.x - headlen * Math.cos(angle - Math.PI / 6), pt2.y - headlen * Math.sin(angle - Math.PI / 6));
+          drawCtx.moveTo(pt2.x, pt2.y);
+          drawCtx.lineTo(pt2.x - headlen * Math.cos(angle + Math.PI / 6), pt2.y - headlen * Math.sin(angle + Math.PI / 6));
+          drawCtx.stroke();
+          drawCtx.setLineDash([]);
+        } else if (stroke.tool !== 'eraser') {
+          drawCtx.globalCompositeOperation = 'source-over';
+          drawCtx.strokeStyle = stroke.color || '#000000';
+          drawCtx.lineWidth = stroke.width || 2;
+          for (let i = 1; i < stroke.points.length; i++) {
+            drawCtx.lineTo(stroke.points[i].x, stroke.points[i].y);
+          }
+          drawCtx.stroke();
+        }
+      });
+
+      // 4. Merge Stroke Layer onto Background Layer and Export
+      bgCtx.drawImage(tempDrawCanvas, 0, 0);
+      return tempBgCanvas.toDataURL('image/png');
     },
     clear: handleFullClear,
     loadImage: (src: string) => {
@@ -228,10 +513,18 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
         setBackgroundImage(img);
 
         // Clear drawing canvas when loading new background
+        const bgCanvas = bgCanvasRef.current;
         const drawCanvas = drawCanvasRef.current;
         const ctx = drawCanvas?.getContext('2d');
-        if (drawCanvas && ctx) {
+        if (drawCanvas && ctx && bgCanvas) {
+          bgCanvas.width = img.width;
+          bgCanvas.height = img.height;
+          drawCanvas.width = img.width;
+          drawCanvas.height = img.height;
+          setBaseSize({ w: img.width, h: img.height });
+
           ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+          setStrokes([]);
           setHistory([]); // Clear history as well since we are starting fresh
         }
 
@@ -242,23 +535,17 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
     }
   }));
 
-  const saveState = () => {
-    const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx) {
-      setHistory(prev => [...prev.slice(-10), ctx.getImageData(0, 0, canvas.width, canvas.height)]);
-    }
+  const saveState = (currentStrokes = strokes) => {
+    setHistory(prev => [...prev.slice(-10), currentStrokes]);
   };
 
   const handleUndo = () => {
-    const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (canvas && ctx && history.length > 0) {
+    if (history.length > 0) {
       const newHistory = [...history];
       const previousState = newHistory.pop();
       setHistory(newHistory);
       if (previousState) {
-        ctx.putImageData(previousState, 0, 0);
+        setStrokes(previousState);
       }
     }
   };
@@ -444,26 +731,219 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
     lastTouchCenterRef.current = { x: cx, y: cy };
   };
 
+  const distanceToLineSegment = (p: Point, v: Point, w: Point) => {
+    const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
+    if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+    let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    const proj = { x: v.x + t * (w.x - v.x), y: v.y + t * (w.y - v.y) };
+    return Math.hypot(p.x - proj.x, p.y - proj.y);
+  };
+
+  const eraseStrokeAt = (x: number, y: number, shouldSaveState: boolean = true) => {
+    const hitRadius = 15;
+    const clickPoint = { x, y };
+
+    // We do hit testing using strokesRef to run it purely synchronously.
+    const current = strokesRef.current;
+    let targetId: string | null = null;
+
+    for (let i = current.length - 1; i >= 0; i--) {
+      const stroke = current[i];
+      if (stroke.tool === 'eraser') continue;
+
+      if (stroke.points.length === 1) {
+        const p = stroke.points[0];
+        if (Math.hypot(clickPoint.x - p.x, clickPoint.y - p.y) <= (stroke.width / 2 + hitRadius)) {
+          targetId = stroke.id;
+          break;
+        }
+      }
+
+      if (stroke.tool === 'text' && stroke.text) {
+        // Approximate Bounding Box for Text
+        const fontSize = stroke.fontSize || 27;
+        const lines = stroke.text.split('\n');
+
+        let maxWidth = 0;
+        lines.forEach(line => {
+          // Rough approximation: character width is usually ~0.6 of font size
+          const lineWidth = line.length * (fontSize * 0.6);
+          if (lineWidth > maxWidth) maxWidth = lineWidth;
+        });
+
+        const boxHeight = lines.length * (fontSize * 1.2);
+
+        // Context fillText uses bottom-ish baseline by default, but here we estimate from top-left where point[0] is.
+        // x is left. y + fontSize is approx the bottom of the first line. 
+        // A wider hit-box is safer.
+        const originX = stroke.points[0].x;
+        const originY = stroke.points[0].y; // Starting Y coordinate
+
+        if (
+          clickPoint.x >= originX - hitRadius &&
+          clickPoint.x <= originX + maxWidth + hitRadius &&
+          clickPoint.y >= originY - hitRadius &&
+          clickPoint.y <= originY + boxHeight + hitRadius
+        ) {
+          targetId = stroke.id;
+          break;
+        }
+        continue;
+      }
+
+      let hit = false;
+      for (let j = 0; j < stroke.points.length - 1; j++) {
+        const d = distanceToLineSegment(clickPoint, stroke.points[j], stroke.points[j + 1]);
+        if (d <= (stroke.width / 2 + hitRadius)) {
+          hit = true;
+          break;
+        }
+      }
+      if (hit) {
+        targetId = stroke.id;
+        break;
+      }
+    }
+
+    if (targetId) {
+      if (shouldSaveState) saveState(current);
+      setStrokes(prev => prev.filter(s => s.id !== targetId));
+    }
+  };
+
+  const handleTextSubmit = () => {
+    if (textInput.text.trim()) {
+      saveState(strokes);
+      const newStroke: Stroke = {
+        id: Math.random().toString(36).substr(2, 9),
+        tool: 'text',
+        points: [{ x: textInput.x, y: textInput.y }],
+        color: activeColor,
+        width: PEN_SIZES[penLevel - 1],
+        text: textInput.text,
+        fontSize: 27
+      };
+      setStrokes(prev => [...prev, newStroke]);
+    }
+    setTextInput({ visible: false, x: 0, y: 0, text: '' });
+  };
+
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     if (!tool) return;
     const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    if (!canvas) return;
 
-    saveState();
+    if (textInput.visible) {
+      handleTextSubmit();
+      return;
+    }
+
+    if (tool === 'text') {
+      const { offsetX, offsetY } = getCoordinates(e, canvas);
+      setTextInput({ visible: true, x: offsetX, y: offsetY, text: '' });
+      setTimeout(() => textInputRef.current?.focus(), 0);
+      return;
+    }
+
+    if (tool === 'move') {
+      const { offsetX, offsetY } = getCoordinates(e, canvas);
+      const hitRadius = 20;
+      let clickedId: string | null = null;
+      for (let i = strokes.length - 1; i >= 0; i--) {
+        const stroke = strokes[i];
+
+        if (stroke.tool === 'text' && stroke.text) {
+          const fontSize = stroke.fontSize || 27;
+          const lines = stroke.text.split('\n');
+          let maxWidth = 0;
+          lines.forEach(line => {
+            const lineWidth = line.length * (fontSize * 0.6);
+            if (lineWidth > maxWidth) maxWidth = lineWidth;
+          });
+          const boxHeight = lines.length * (fontSize * 1.2);
+          const originX = stroke.points[0].x;
+          const originY = stroke.points[0].y;
+
+          if (
+            offsetX >= originX - hitRadius &&
+            offsetX <= originX + maxWidth + hitRadius &&
+            offsetY >= originY - hitRadius &&
+            offsetY <= originY + boxHeight + hitRadius
+          ) {
+            clickedId = stroke.id;
+            break;
+          }
+          continue;
+        }
+
+        if (stroke.tool === 'arrow') {
+          if (stroke.points.some(p => Math.abs(p.x - offsetX) < hitRadius && Math.abs(p.y - offsetY) < hitRadius)) {
+            clickedId = stroke.id;
+            break;
+          }
+        }
+      }
+      if (clickedId) {
+        saveState(strokes);
+        setSelectedMoveId(clickedId);
+        moveStartPosRef.current = { x: offsetX, y: offsetY };
+        setIsDrawing(true);
+      }
+      return;
+    }
+
+    if (tool === 'eraser' && eraserMode === 'stroke') {
+      const { offsetX, offsetY } = getCoordinates(e, canvas);
+      saveState(strokes);
+      eraseStrokeAt(offsetX, offsetY, false);
+      setIsDrawing(true);
+      return;
+    }
+
+    if (tool === 'arrow') {
+      const { offsetX, offsetY } = getCoordinates(e, canvas);
+      saveState(strokes);
+      const newStroke: Stroke = {
+        id: Math.random().toString(36).substr(2, 9),
+        tool: tool,
+        points: [{ x: offsetX, y: offsetY }],
+        color: activeColor,
+        width: 2,
+        arrowStyle: arrowStyle
+      };
+      currentStrokeRef.current = newStroke;
+      setIsDrawing(true);
+      return;
+    }
+
+    saveState(strokes);
     setIsDrawing(true);
 
     const { offsetX, offsetY } = getCoordinates(e, canvas);
+    const newStroke: Stroke = {
+      id: Math.random().toString(36).substr(2, 9),
+      tool: tool,
+      eraserMode: tool === 'eraser' ? 'pixel' : undefined,
+      points: [{ x: offsetX, y: offsetY }],
+      color: tool === 'eraser' ? '#ffffff' : activeColor,
+      width: tool === 'eraser' ? ERASER_SIZES[eraserLevel - 1] : PEN_SIZES[penLevel - 1],
+    };
+    currentStrokeRef.current = newStroke;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     ctx.beginPath();
     ctx.moveTo(offsetX, offsetY);
 
     if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = eraserSize;
+      ctx.lineWidth = ERASER_SIZES[eraserLevel - 1];
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = activeColor;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = tool === 'arrow' ? 2 : PEN_SIZES[penLevel - 1];
     }
   };
 
@@ -473,24 +953,89 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       const { offsetX, offsetY } = getCoordinates(e, canvas);
       setCursorPos({ x: offsetX, y: offsetY });
       setShowCursor(true);
+
+      if (isDrawing && eraserMode === 'stroke') {
+        eraseStrokeAt(offsetX, offsetY, false);
+        return;
+      }
+    } else if (tool === 'pen') {
+      const { offsetX, offsetY } = getCoordinates(e, canvas);
+      setCursorPos({ x: offsetX, y: offsetY });
+      setShowCursor(true);
     } else {
       setShowCursor(false);
     }
 
-    if (!isDrawing || !tool) return;
+    if (!isDrawing || !tool || (tool === 'eraser' && eraserMode === 'stroke') || tool === 'text') return;
     const canvasEl = drawCanvasRef.current;
     const ctx = canvasEl?.getContext('2d');
     if (!canvasEl || !ctx) return;
 
     const { offsetX, offsetY } = getCoordinates(e, canvasEl);
+
+    if (tool === 'move' && selectedMoveId && moveStartPosRef.current) {
+      const dx = offsetX - moveStartPosRef.current.x;
+      const dy = offsetY - moveStartPosRef.current.y;
+
+      const newStrokes = strokes.map(stroke => {
+        if (stroke.id === selectedMoveId) {
+          return {
+            ...stroke,
+            points: stroke.points.map(p => ({ x: p.x + dx, y: p.y + dy }))
+          };
+        }
+        return stroke;
+      });
+      setStrokes(newStrokes);
+      moveStartPosRef.current = { x: offsetX, y: offsetY };
+      redrawAllStrokes(newStrokes);
+      return;
+    }
+
+    if (tool === 'arrow') {
+
+      if (currentStrokeRef.current) {
+        currentStrokeRef.current.points = [currentStrokeRef.current.points[0], { x: offsetX, y: offsetY }];
+        redrawAllStrokes([...strokes, currentStrokeRef.current]);
+      }
+      return;
+    }
+
+    if (currentStrokeRef.current) {
+      currentStrokeRef.current.points.push({ x: offsetX, y: offsetY });
+    }
+
     ctx.lineTo(offsetX, offsetY);
     ctx.stroke();
   };
 
   const stopDrawing = () => {
+    if (tool === 'move') {
+      setSelectedMoveId(null);
+      moveStartPosRef.current = null;
+      setIsDrawing(false);
+      redrawAllStrokes(strokes);
+      return;
+    }
+
+    if (tool === 'eraser' && eraserMode === 'stroke') {
+      setIsDrawing(false);
+      return;
+    }
     const canvas = drawCanvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (ctx) ctx.closePath();
+
+    if (currentStrokeRef.current) {
+      const strokeToAdd = currentStrokeRef.current;
+      if (strokeToAdd.tool === 'arrow' && strokeToAdd.points.length < 2) {
+        // don't add point-only arrow
+      } else {
+        setStrokes(prev => [...prev, strokeToAdd]);
+      }
+      currentStrokeRef.current = null;
+    }
+
     setIsDrawing(false);
   };
 
@@ -513,10 +1058,19 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
   function handleFullClear() {
     const bgCanvas = bgCanvasRef.current;
     const drawCanvas = drawCanvasRef.current;
+    const container = containerRef.current;
 
-    if (bgCanvas && drawCanvas) {
+    if (bgCanvas && drawCanvas && container) {
       const bgCtx = bgCanvas.getContext('2d');
       const drawCtx = drawCanvas.getContext('2d');
+
+      // Reset base size to container size
+      const { clientWidth, clientHeight } = container;
+      bgCanvas.width = clientWidth;
+      bgCanvas.height = clientHeight;
+      drawCanvas.width = clientWidth;
+      drawCanvas.height = clientHeight;
+      setBaseSize({ w: clientWidth, h: clientHeight });
 
       if (bgCtx && drawCtx) {
         bgCtx.fillStyle = '#FFFFFF';
@@ -526,19 +1080,14 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
     }
     setBackgroundImage(null);
     onImageChange(false);
+    setStrokes([]);
     setHistory([]);
     setTransform({ x: 0, y: 0, scale: 1 }); // Reset zoom on clear
   }
 
   const handleSketchClear = () => {
-    const drawCanvas = drawCanvasRef.current;
-    if (drawCanvas) {
-      const ctx = drawCanvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-      }
-    }
-    setHistory([]);
+    setStrokes([]);
+    setHistory(prev => [...prev.slice(-10), strokes]);
   };
 
   function drawImageProp(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, offsetX = 0.5, offsetY = 0.5) {
@@ -570,103 +1119,213 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
       {/* Restored Toolbar: Gap-0 (Merged) & Thin borders */}
       <div className="absolute top-4 left-4 z-30 flex flex-col gap-0 p-0 shadow-none">
 
-        {/* Pen Tool */}
-        <div className="relative group bg-white border border-black shadow-sm">
-          <button
-            onClick={() => setTool(tool === 'pen' ? null : 'pen')}
-            className={`p-2 transition-colors w-full flex items-center justify-center ${tool === 'pen' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
-            title="Pen"
-          >
-            <Pen size={16} />
-          </button>
+        <div
+          className={`flex flex-col gap-0 transition-all duration-300 ease-in-out origin-top ${isToolbarExpanded ? 'max-h-[500px] opacity-100 overflow-visible' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'}`}
+        >
+          {/* Pen Tool */}
+          <div className="relative group bg-white border border-black shadow-sm">
+            <button
+              onClick={() => {
+                if (tool === 'pen') {
+                  setIsPenMenuOpen(!isPenMenuOpen);
+                } else {
+                  setTool('pen');
+                  setIsPenMenuOpen(true);
+                  setIsEraserMenuOpen(false);
+                  setIsArrowMenuOpen(false);
+                }
+              }}
+              className={`p-2 transition-colors w-full flex items-center justify-center h-[34px] ${tool === 'pen' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+              title="Pen"
+            >
+              <Pen size={16} />
+            </button>
 
-          {tool === 'pen' && (
-            <div className="absolute left-full top-0 ml-2 border border-black bg-white flex flex-row h-full items-center px-2 py-1 gap-2 w-max shadow-sm z-40">
-              {COLORS.map(color => (
-                <button
-                  key={color}
-                  onClick={(e) => { e.stopPropagation(); setActiveColor(color); }}
-                  className={`w-5 h-5 rounded-full border border-gray-200 hover:scale-110 transition-transform ${activeColor === color ? 'ring-2 ring-black ring-offset-1' : ''}`}
-                  style={{ backgroundColor: color }}
-                  title={color}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Eraser Tool (-mt-px for single border) */}
-        <div className="relative group bg-white border border-black shadow-sm -mt-px">
-          <button
-            onClick={() => setTool(tool === 'eraser' ? null : 'eraser')}
-            className={`p-2 transition-colors w-full flex items-center justify-center ${tool === 'eraser' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
-            title="Eraser"
-          >
-            <Eraser size={16} />
-          </button>
-
-          {tool === 'eraser' && (
-            <div className="absolute left-full top-0 ml-2 border border-black bg-white flex flex-row h-full items-center px-2 py-1 gap-2 w-max shadow-sm z-40">
-              {ERASER_SIZES.map(size => (
-                <button
-                  key={size}
-                  onClick={(e) => { e.stopPropagation(); setEraserSize(size); }}
-                  className={`rounded-full border border-black hover:bg-gray-200 transition-colors flex items-center justify-center ${eraserSize === size ? 'bg-black' : 'bg-transparent'}`}
-                  style={{ width: Math.min(24, size / 2 + 4), height: Math.min(24, size / 2 + 4) }}
-                >
-                  <div
-                    className={`rounded-full ${eraserSize === size ? 'bg-white' : 'bg-black'}`}
-                    style={{ width: size / 4, height: size / 4 }}
+            {isPenMenuOpen && (
+              <div className="absolute left-full top-0 ml-2 border border-black bg-white flex flex-col w-[160px] shadow-sm z-40">
+                <div className="flex flex-row h-[34px] items-center px-3 gap-3 border-b border-black">
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="1"
+                    value={penLevel}
+                    onChange={(e) => setPenLevel(Number(e.target.value))}
+                    className="flex-1 appearance-none h-2 bg-gray-200 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black cursor-pointer"
+                    style={{ background: `linear-gradient(to right, #d1d5db 0%, #000000 ${((penLevel - 1) / 4) * 100}%, rgba(85, 85, 85, 0.5) ${((penLevel - 1) / 4) * 100}%, rgba(85, 85, 85, 0.5) 100%)` }}
                   />
-                </button>
-              ))}
-            </div>
-          )}
+                </div>
+                <div className="flex flex-row h-[34px] items-center justify-center px-1 gap-1">
+                  {COLORS.map(color => (
+                    <button
+                      key={color}
+                      onClick={(e) => { e.stopPropagation(); setActiveColor(color); }}
+                      className={`w-5 h-5 rounded-full border border-gray-200 hover:scale-110 transition-transform ${activeColor === color ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Eraser Tool (-mt-px for single border) */}
+          <div className="relative group bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={() => {
+                if (tool === 'eraser') {
+                  setIsEraserMenuOpen(!isEraserMenuOpen);
+                } else {
+                  setTool('eraser');
+                  setIsEraserMenuOpen(true);
+                  setIsPenMenuOpen(false);
+                  setIsArrowMenuOpen(false);
+                }
+              }}
+              className={`p-2 transition-colors w-full flex items-center justify-center h-[34px] ${tool === 'eraser' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+              title="Eraser"
+            >
+              <Eraser size={16} />
+            </button>
+
+            {isEraserMenuOpen && (
+              <div className="absolute left-full top-0 ml-2 border border-black bg-white flex flex-col w-[160px] shadow-sm z-40">
+                <div className="flex flex-row h-[34px] w-full items-center px-3 gap-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="1"
+                    value={eraserLevel}
+                    onChange={(e) => setEraserLevel(Number(e.target.value))}
+                    className="flex-1 appearance-none h-2 bg-gray-200 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black cursor-pointer"
+                    style={{ background: `linear-gradient(to right, #d1d5db 0%, #000000 ${((eraserLevel - 1) / 4) * 100}%, rgba(85, 85, 85, 0.5) ${((eraserLevel - 1) / 4) * 100}%, rgba(85, 85, 85, 0.5) 100%)` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Text Tool */}
+          <div className="relative group bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={() => {
+                if (tool === 'text') {
+                  setIsTextMenuOpen(!isTextMenuOpen);
+                } else {
+                  setTool('text');
+                  setIsTextMenuOpen(true);
+                  setIsPenMenuOpen(false);
+                  setIsEraserMenuOpen(false);
+                  setIsArrowMenuOpen(false);
+                }
+              }}
+              className={`p-2 transition-colors w-full flex items-center justify-center h-[34px] ${tool === 'text' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+              title="Text"
+            >
+              <Type size={16} />
+            </button>
+
+
+          </div>
+
+          {/* Arrow Tool */}
+          <div className="relative group bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={() => {
+                if (tool === 'arrow') {
+                  setIsArrowMenuOpen(!isArrowMenuOpen);
+                } else {
+                  setTool('arrow');
+                  setIsArrowMenuOpen(true);
+                  setIsPenMenuOpen(false);
+                  setIsEraserMenuOpen(false);
+                }
+              }}
+              className={`p-2 transition-colors w-full flex items-center justify-center h-[34px] ${tool === 'arrow' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+              title="Arrow"
+            >
+              <ArrowRight size={16} />
+            </button>
+
+            {isArrowMenuOpen && (
+              <div className="absolute left-full top-0 ml-2 border border-black bg-white flex flex-col w-[160px] shadow-sm z-40">
+                <div className="flex flex-row h-[34px]">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setArrowStyle('solid'); }}
+                    className={`flex-1 flex px-3 items-center justify-center transition-colors border-r border-black ${arrowStyle === 'solid' ? 'bg-black text-white' : 'hover:bg-gray-100'}`}
+                    title="Solid"
+                  >
+                    <div className={`w-6 border-b-2 ${arrowStyle === 'solid' ? 'border-white' : 'border-black'}`} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setArrowStyle('dotted'); }}
+                    className={`flex-1 flex px-3 items-center justify-center transition-colors ${arrowStyle === 'dotted' ? 'bg-black text-white' : 'hover:bg-gray-100'}`}
+                    title="Dotted"
+                  >
+                    <div className={`w-6 border-b-2 border-dotted ${arrowStyle === 'dotted' ? 'border-white' : 'border-black'}`} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Move Tool */}
+          <div className="bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={() => {
+                setTool(tool === 'move' ? null : 'move');
+                setIsPenMenuOpen(false);
+                setIsEraserMenuOpen(false);
+                setIsArrowMenuOpen(false);
+              }}
+              className={`p-2 transition-colors w-full flex items-center justify-center h-[34px] ${tool === 'move' ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+              title="Move"
+            >
+              <Move size={16} />
+            </button>
+          </div>
+
+          {/* Undo */}
+          <div className="bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={handleUndo}
+              className="p-2 hover:bg-gray-100 text-black transition-colors flex items-center justify-center w-full h-[34px]"
+              title="Undo"
+            >
+              <Undo size={16} />
+            </button>
+          </div>
+
+          {/* Clear */}
+          <div className="bg-white border border-black shadow-sm -mt-px">
+            <button
+              onClick={handleSketchClear}
+              className="p-2 hover:bg-red-50 text-red-600 transition-colors flex items-center justify-center w-full h-[34px]"
+              title="Clear Canvas"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Undo */}
-        <div className="bg-white border border-black shadow-sm -mt-px">
+        {/* Settings Toggle */}
+        <div className={`bg-white border border-black shadow-sm transition-all duration-300 relative z-10 ${isToolbarExpanded ? '-mt-px' : ''}`}>
           <button
-            onClick={handleUndo}
-            className="p-2 hover:bg-gray-100 text-black transition-colors flex items-center justify-center w-full"
-            title="Undo"
+            onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
+            className={`p-2 transition-colors flex items-center justify-center w-full h-[34px] ${!isToolbarExpanded ? 'bg-black text-white' : 'hover:bg-gray-100 text-black'}`}
+            title="Toggle Toolbar"
           >
-            <Undo size={16} />
-          </button>
-        </div>
-
-        {/* Clear */}
-        <div className="bg-white border border-black shadow-sm -mt-px">
-          <button
-            onClick={handleSketchClear}
-            className="p-2 hover:bg-red-50 text-red-600 transition-colors flex items-center justify-center w-full"
-            title="Clear Canvas"
-          >
-            <Trash2 size={16} />
+            <Settings size={16} />
           </button>
         </div>
       </div>
 
-      {/* Upload Buttons */}
-      {/* Upload Buttons or X (Full Clear) */}
+      {/* Upload Buttons Removed As Per Request */}
       {
         !backgroundImage ? (
-          <div className="absolute top-4 right-4 z-30 flex gap-0 border border-black bg-white shadow-none">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 hover:bg-gray-100 text-black flex items-center gap-2 px-3 font-display text-base tracking-wide"
-            >
-              <ImageIcon size={16} />
-              <span>UPLOAD</span>
-            </button>
-            <div className="w-px bg-black h-full"></div>
-            <label className="lg:hidden p-2 hover:bg-gray-100 text-black flex items-center gap-2 px-3 font-display text-base tracking-wide cursor-pointer">
-              <Camera size={16} />
-              <span>CAMERA</span>
-              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageUpload} />
-            </label>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-          </div>
+          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
         ) : (
           <button
             onClick={handleFullClear}
@@ -703,14 +1362,13 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
           <div className="absolute inset-0 bg-black/2 border-4 border-dashed border-gray-100/50 z-50 pointer-events-none flex items-center justify-center"></div>
         )}
 
-        {/* Transform Wrapper for Zoom/Pan */}
+        {/* Transform Wrapper for Zoom/Pan and Fit Scale */}
         <div
           className="absolute origin-top-left will-change-transform shadow-none"
           style={{
-            transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-            // We set width/height to match the canvas size exactly
-            width: bgCanvasRef.current?.width || '100%',
-            height: bgCanvasRef.current?.height || '100%'
+            transform: `translate(${transform.x + fitTransform.offsetX}px, ${transform.y + fitTransform.offsetY}px) scale(${transform.scale * fitTransform.scale})`,
+            width: baseSize.w > 0 ? baseSize.w : '100%',
+            height: baseSize.h > 0 ? baseSize.h : '100%'
           }}
         >
           {/* Custom Eraser Cursor (Inside transform so it scales/moves with canvas? No, usually cursor floats. 
@@ -734,47 +1392,63 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
           <canvas
             ref={drawCanvasRef}
             className="absolute inset-0 block w-full h-full z-10"
-            style={{
-              cursor: tool === 'pen' ? penCursor : (tool === 'eraser' ? 'none' : 'auto')
-              // Note: Events are handled by parent container now for Pan logic, 
-              // but we kept canvas 'block' to ensure it takes space.
-              // pointer-events must be allowed.
-            }}
+            style={{ pointerEvents: 'none' }}
           />
+
+          {/* Layer 2: Interactive Overlay (Text Input) */}
+          {textInput.visible && (
+            <textarea
+              ref={textInputRef}
+              value={textInput.text}
+              onChange={(e) => setTextInput({ ...textInput, text: e.target.value })}
+              onBlur={handleTextSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleTextSubmit();
+                  setTool(null); // Return to default tool after finishing
+                }
+              }}
+              className="absolute z-20 outline-none border border-black bg-transparent p-0 m-0 leading-tight resize-none whitespace-pre overflow-hidden text-left"
+              style={{
+                textAlign: 'left',
+                left: textInput.x,
+                top: textInput.y,
+                color: activeColor,
+                fontSize: `30px`,
+                fontFamily: 'Inter, sans-serif',
+                minWidth: '20px',
+                minHeight: '44px',
+                lineHeight: 1.2,
+                // Auto-expand based on content
+                width: `${Math.max(20, textInput.text.length * 20)}px`,
+                height: `${Math.max(44, textInput.text.split('\n').length * 44)}px`
+              }}
+            />
+          )}
         </div>
 
-        {/* Custom Eraser Cursor - Positioned visually */}
+        {/* Custom Eraser/Pen Cursor - Positioned visually */}
         {
-          tool === 'eraser' && showCursor && (
+          (tool === 'eraser' || tool === 'pen') && showCursor && (
             <div
-              className="pointer-events-none absolute border border-gray-500 rounded-full z-50 transform -translate-x-1/2 -translate-y-1/2"
+              className="pointer-events-none absolute rounded-full z-50 transform -translate-x-1/2 -translate-y-1/2"
               style={{
-                // Cursor needs to follow the MOUSE (Client), not the canvas coordinate directly if we want it under the finger
-                // But the 'cursorPos' state comes from 'getCoordinates' which is now transformed.
-                // WE NEED 'screen' coordinates for the cursor overlay if it's outside the transform div.
-                // Let's rely on standard logic: getCoordinates returns Canvas Logic Coords.
-                // If we display this Div OUTSIDE the transform, we need Client Coords.
-                // I will adjust draw() to set use client offset for cursor display if possible, or inverse transform.
-
-                // SIMPLIFICATION: Put cursor INSIDE transform wrapper? Then it scales. 
-                // Eraser size usually implies 'canvas pixels'. If I zoom in, 10px eraser should erase 10px of canvas (so it looks bigger on screen).
-                // So YES, cursor should be inside transform wrapper or scaled match.
-                // Let's try putting it effectively "on top" visually using transformed coords.
-
-                left: cursorPos.x * transform.scale + transform.x,
-                top: cursorPos.y * transform.scale + transform.y,
-                width: eraserSize * transform.scale,
-                height: eraserSize * transform.scale,
-
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                borderColor: 'black'
+                left: cursorPos.x * (transform.scale * fitTransform.scale) + (transform.x + fitTransform.offsetX),
+                top: cursorPos.y * (transform.scale * fitTransform.scale) + (transform.y + fitTransform.offsetY),
+                width: (tool === 'eraser' ? ERASER_SIZES[eraserLevel - 1] : PEN_SIZES[penLevel - 1]) * (transform.scale * fitTransform.scale),
+                height: (tool === 'eraser' ? ERASER_SIZES[eraserLevel - 1] : PEN_SIZES[penLevel - 1]) * (transform.scale * fitTransform.scale),
+                backgroundColor: tool === 'eraser' ? 'rgba(255, 255, 255, 0.2)' : activeColor,
+                opacity: 0.5,
+                borderColor: 'black',
+                borderWidth: tool === 'eraser' ? '1px' : '0px'
               }}
             />
           )
         }
 
-      </div >
-    </div >
+      </div>
+    </div>
   );
 });
 

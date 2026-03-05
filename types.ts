@@ -4,9 +4,8 @@ export enum BlueprintMode {
 }
 
 export enum ImageResolution {
-  Res_1K = '1K',
-  Res_2K = '2K',
-  Res_4K = '4K',
+  Normal = 'NORMAL QUALITY',
+  High = 'HIGH QUALITY',
 }
 
 export type ThemeMode = 'light' | 'dark';

@@ -1164,8 +1164,8 @@ Specific 지침:
 
               ## 1. Metacognitive Analysis (From ROOM 1 & 2)
               * **Diagnosis:** [${mode}] / [STYLE ${styleMode === 'NONE' ? 'NONE' : styleMode}]
-                  * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy)
-              * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2)
+                  * *Reasoning:* (Findings from Room 1 Definition & Room 2 Strategy. MUST BE WRITTEN IN KOREAN / 반드시 한국어로만 작성할 것)
+              * **Design Strategy:** [Active Shaping / Passive Preservation] (Derived from Room 2. MUST BE WRITTEN IN KOREAN / 반드시 한국어로만 작성할 것)
               * **Sensory-Technical Translation (From Room 2 & 3):**
                   * *Abstract:* (User's abstract intent, e.g., "Cozy", "Grand")
                   * *→ Tech Spec:* (Translated physical/optical values)
