@@ -34,7 +34,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ADMIN_EMAILS = [
         'dermbi@cre-te.com', 'brown@cre-te.com', 'parisking@cre-te.com',
         'stc602@cre-te.com', 'sbin@cre-te.com', 'kimdongwook@cre-te.com',
-        'woohj@cre-te.com', 'bbyj@cre-te.com', 'hyeon@cre-te.com', 'je@cre-te.com'
+        'woohj@cre-te.com', 'bbyj@cre-te.com', 'hyeon@cre-te.com', 'je@cre-te.com',
+        '3rimy@cre-te.com', 'unan@cre-te.com'
     ];
 
     // Helpers to check account tiers
