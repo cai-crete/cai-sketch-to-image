@@ -1,0 +1,157 @@
+---
+marp: true
+theme: default
+paginate: true
+header: 'CRE-TE | CAI: Sketch to Image (Developer Edition)'
+footer: '© CRETE CO.,LTD. 2026. ALL RIGHTS RESERVED. (Confidential)'
+size: 16:9
+---
+
+# 💻 CAI: Sketch to Image 
+**개발자 매뉴얼 북 (Developer/Architecture Manual)**
+
+해커톤부터 프로덕션 배포까지.
+아키텍처 설계, 외부 연동 구조 및 코어 알고리즘 분석 가이드.
+
+---
+
+## 📋 목차 (Table of Contents)
+
+1. **프로젝트 연혁 및 아키텍처 진화 (Version History)**
+2. **기술 스택 및 디렉토리 구조 (Tech Stack & Structure)**
+3. **핵심 구동 프로토콜 1: 이미지 분석 (Gemini & ROOM Concept)**
+4. **핵심 구동 프로토콜 2: 이미지 생성 (Stability AI)**
+5. **Auth 및 데이터베이스 연동 (Supabase / OAuth)**
+6. **배포 및 CI/CD 인프라 (Vercel & GitHub)**
+7. **Antigravity (AI Agent) 기반 개발 방법론**
+8. **환경 변수 가이드 및 트러블슈팅**
+
+---
+
+# 1. 프로젝트 연혁 및 아키텍처 진화
+
+**"단순한 스케치 도구에서, 메타인지를 갖춘 멀티모달 서비스로"**
+
+- `v1.0 (MVP)`: HTML Canvas 기반의 단순 드로잉 및 Stable Diffusion API 1:1 결합. 인메모리 방식.
+- `v1.5 (고도화)`: React + Vite + Tailwind 전환. 반응형 UI 분기(Web/Tablet/Mobile). 로컬 스토리지 기반 히스토리 관리.
+- `v1.8 (통합)`: 모바일 환경 대응을 위한 Camera API 연동. Supabase Database 도입으로 작업물('Library') 영구 저장 지원.
+- `v2.0 (현행 아키텍처)`: 
+  - **Auth**: Supabase 기반의 JWT 인증, Google/Kakao OAuth 연동 및 실시간 승인(Realtime Channel) 도입.
+  - **AI Pipeline**: `Gemini Vision` -> `Diagnosis (ROOM)` -> `Stability AI` 로 이어지는 2단계 파이프라인.
+  - **Permissions**: 일반(100회) / 테스트(1000회) / 관리자(무제한) 등급 롤(Role) 시스템 구현 (`AuthContext.tsx`).
+
+---
+
+# 2. 기술 스택 및 주요 구조 (Tech Stack)
+
+### 🛠 Core Technologies
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS
+- **State Management**: React Hooks (Context API), LocalStorage
+- **Backend/BaaS**: Supabase (PostgreSQL, Auth, Realtime)
+- **AI Models**: Google Gemini Vision 1.5 Pro (Multimodal), Stability AI (ControlNet/SD3)
+- **Icons**: Lucide-React
+
+### 📂 Directory Structure 핵심
+- `/src/components`: `App.tsx`(메인 레이아웃), `CanvasBoard.tsx`(드로잉 엔진), `AuthScreen.tsx`(모달 인증), `Library.tsx`(DB 뷰어)
+- `/src/hooks`: `useBlueprintGeneration.ts` (Gemini -> Stability 호출을 오케스트레이션하는 컨트롤러)
+- `/src/services`: `geminiService.ts`, `stabilityService.ts`, `supabase.ts` (API Client 객체들)
+
+---
+
+# 3. 핵심 구동 프로토콜 1: 이미지 분석 (ROOM)
+
+단순한 이미지 생성을 넘어, **'ROOM(공간/객체)' 스케치의 구조적 맥락(Context)을 기계가 이해하는 프레임워크**입니다.
+
+1. **Base64 추출**: `CanvasBoard`에서 현재 그려진 선들을 Background와 결합해 Base64 형태로 Export.
+2. **멀티모달 프롬프팅 (geminiService.ts)**:
+   - 사용자가 그린 스케치(Image) + 하단 텍스트(Prompt)를 Gemini API로 전송.
+   - **System Instruction**: "너는 건축 및 디자인 전문가다. 스케치를 보고 다음 JSON 포맷으로 응답하라."
+3. **Metacognitive Analysis (메타인지 JSON 추출)**:
+   - `diagnosis`: 사용자가 이 스케치(ROOM)를 통해 무엇을 의도했는가?
+   - `reasoning`: 왜 그렇게 판단했는가?
+   - `geometry` & `materiality`: 형태적 특징과 재질 추론.
+4. 이 JSON 데이터는 이후 디버깅 목적을 넘어, **Stability AI 프롬프트 생성을 위한 맥락 지시어**로 재가공됩니다.
+
+---
+
+# 4. 핵심 구동 프로토콜 2: 이미지 생성 (Stability AI)
+
+Gemini가 파악한 의도(Diagnosis)를 바탕으로 실제 픽셀을 렌더링합니다.
+
+1. **Payload Assembly (`useBlueprintGeneration.ts`)**:
+   - `prompt`: `사용자 입력 텍스트` + `Gemini가 분석한 Diagnosis` + `선택된 Style (예: Line art)`결합.
+   - `image`: 사용자의 Base64 원본 스케치
+   - `control_strength`: 스케치 선을 얼마나 엄격하게 따를 것인가? (0.7 등)
+2. **API Request (`stabilityService.ts`)**:
+   - Stability AI의 `ControlNet` (또는 `SD3 Image-to-Image`) 엔드포인트로 전송.
+3. **Response Handling**:
+   - 반환된 이미지를 화면 뷰어(`ResultViewer.tsx`)에 표시.
+   - 최종 완성된 이미지 세트(Prompt, Analysis, Image URL)를 Supabase DataBase에 `Insert` 하여 Library에 아카이빙.
+
+---
+
+# 5. Auth 및 데이터베이스 연동 (Supabase)
+
+### 🔐 인증 (Authentication)
+- **제공자 (Providers)**: Email/Password, Google OAuth, Kakao OAuth
+- **연동 설정지**: Supabase 대시보드 내 `Authentication > Providers` 
+  (GCP OAuth Client ID, 카카오 Developers REST API 키 등록)
+- **Approval System (승인제)**: 가입 직후 `profiles` 테이블의 `is_approved`는 `false`로 설정. 관리자 승인 후 `true`로 업데이트될 때까지 Realtime(Postgres Changes) 또는 Polling으로 모니터링하여 즉시 로그인 전환 (`AuthScreen.tsx`).
+
+### 🗄 데이터베이스 (PostgreSQL)
+- **`profiles` 테이블**: `id` (UUID), `email`, `is_approved` (Boolean) - RLS(Row Level Security) 설정됨.
+- **Count 우회 로직**: `contexts/AuthContext.tsx` 내 하드코딩된 `ADMIN_EMAILS` 배열을 거쳐 `Tier: ADMIN` 획득 시, DB 체크 없이 `Counts: ∞` 유지.
+
+---
+
+# 6. 배포 및 인프라 (Infrastructure)
+
+CAI 어플리케이션은 서버리스(Serverless) 프론트엔드 환경을 지향합니다.
+
+1. **Version Control**: GitHub (`cai-crete/cai-sketch-to-image`)
+   - `main` 브랜치에 코드가 푸시되면 Vercel로 자동 트리거.
+2. **Deployment (Vercel)**
+   - Vercel Edge 네트워크를 통한 정적 파일 호스팅 기반.
+   - **Environment Variables**: Vercel Settings 탭에서 API Key들을 반드시 주입. 주입되지 않을 시 배포본에서 AI 및 Auth 기능 마비.
+   - 도메인 연동 및 SSL 자동 발급.
+3. **External Dependencies 배포 시 유의점**:
+   - OAuth 콜백 URL: Supabase Auth 설정의 `Site URL` 및 `Redirect URLs`에 배포된 Vercel 도메인을 반드시 추가해야 구글/카카오 로그인이 에러 없이 리다이렉트됨.
+
+---
+
+# 7. Antigravity (AI Agent) 기반 개발 방법론
+
+본 프로젝트의 유지보수 및 주요 기능 확장은 딥마인드 기반 AI 코딩 에이전트인 **Antigravity**와의 협업(Pair Programming)으로 이루어졌습니다.
+
+**🤖 Antigravity 활용 수칙:**
+1. **명확한 지시문 (Prompt Engineering)**: "모달의 z-index를 올려줘" 보다는 "캔버스의 210보다 높도록 우측 패널의 z-index를 220으로 상향하는 계획을 수립해" 와 같이 아키텍쳐 맥락을 포함해 지시합니다.
+2. **단계적 권한 위임**: 
+   - `PLANNING`(수행 계획 수립) -> User 승인 -> `EXECUTION`(코드 작성 및 수정) -> `VERIFICATION`(GitHub 푸시) 프로세스 준수.
+3. **Artifacts 활용**: `task.md` (체크리스트 상태 추적) 및 `implementation_plan.md` (아키텍처 스케치) 문서를 통해 AI Agent가 컨텍스트(Context)를 잃지 않고 거대 코드베이스(`App.tsx` 등)를 수정하게 유도합니다.
+
+---
+
+# 8. Environment Variables (환경 변수) 가이드
+
+로컬 환경 구조(`.env.local`) 및 배포 환경(Vercel)에 등록해야 하는 필수 키 목록.
+
+```env
+# AI Models
+VITE_GEMINI_API_KEY=AIzaSy... (Google AI Studio 발급 - 메타인지 분석용)
+VITE_STABILITY_API_KEY=sk-... (Stability AI 발급 - 렌더링용)
+
+# Supabase (BaaS)
+VITE_SUPABASE_URL=https://[YOUR-PROJECT-ID].supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbG...
+
+# Role Based Admin Policies
+VITE_ADMIN_EMAILS=dermbi@cre-te.com, ..., je@cre-te.com (현재는 AuthContext.tsx 내부에서 하드코딩 배열로 병행 관리 중)
+VITE_TEST_EMAILS=test@cre-te.com (자동 승인 및 초기 1000회 부여 계정)
+```
+*Note: `VITE_` 접두사가 있어야 Vite/React 클라이언트 환경에서 `import.meta.env`로 접근 가능합니다. 절대 API 키를 코드 안에 하드코딩(`git commit`)하지 마십시오.*
+
+---
+# 
+### Thank You!
+**End of Developer Manual Book**
+If you have any architecture-related questions, consult the codebase or Antigravity Agent logs.

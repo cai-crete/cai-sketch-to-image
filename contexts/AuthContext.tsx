@@ -10,6 +10,7 @@ interface AuthContextType {
     loading: boolean;
     tier: AccountTier;
     counts: number;
+    totalUsers: number;
     deductCount: (amount?: number) => boolean;
 }
 
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
     loading: true,
     tier: 'REGULAR',
     counts: 0,
+    totalUsers: 0,
     deductCount: () => false,
 });
 
@@ -30,6 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [counts, setCounts] = useState<number>(0);
+    const [totalUsers, setTotalUsers] = useState<number>(0);
 
     const ADMIN_EMAILS = [
         'dermbi@cre-te.com', 'brown@cre-te.com', 'parisking@cre-te.com',
@@ -148,6 +151,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, []);
 
+    const fetchTotalUsers = async () => {
+        try {
+            const { count, error } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true });
+
+            if (!error && count !== null) {
+                setTotalUsers(count);
+            }
+        } catch (error) {
+            console.error("Error fetching total users:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchTotalUsers();
+        }
+    }, [user]);
+
     // Count Management Logic (Local Storage)
     const initializeCounts = (userId: string, email: string | undefined) => {
         const currentTier = getAccountTier(email);
@@ -198,7 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, tier, counts, deductCount }}>
+        <AuthContext.Provider value={{ user, loading, tier, counts, totalUsers, deductCount }}>
             {children}
         </AuthContext.Provider>
     );

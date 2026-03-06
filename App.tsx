@@ -111,7 +111,7 @@ function App() {
   const canvasRef = useRef<CanvasRef>(null);
 
   // Auth & Token State
-  const { user, tier, counts, deductCount } = useAuth();
+  const { user, tier, counts, totalUsers, deductCount } = useAuth();
 
   // Auth Screen State
   const [showAuthScreen, setShowAuthScreen] = useState(false);
@@ -346,6 +346,11 @@ function App() {
                     <User size={16} />
                     <span>Count: {tier === 'VIP' || tier === 'CUSTOMER' || tier === 'TEST' ? `${counts} (${tier === 'VIP' ? 'VIP' : tier === 'CUSTOMER' ? 'Customer' : 'Test'})` : tier === 'ADMIN' ? '∞ (CRE-TE)' : counts}</span>
                   </div>
+                  {user?.email && ['dermbi@cre-te.com', 'brown@cre-te.com', 'parisking@cre-te.com', 'kimdongwook@cre-te.com'].includes(user.email.toLowerCase()) && (
+                    <div className="font-mono text-sm opacity-80 flex items-center gap-2">
+                      <span>USER: {totalUsers}</span>
+                    </div>
+                  )}
                   <button
                     onClick={async () => {
                       if (isProcessing) return;
