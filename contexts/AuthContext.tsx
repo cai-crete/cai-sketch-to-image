@@ -158,13 +158,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (storedCounts === null) {
             // First time login for this user
-            let initialAmount = 100;
-
+            let initialAmount = currentTier === 'TEST' ? 1000 : 100;
             localStorage.setItem(storageKey, initialAmount.toString());
             setCounts(initialAmount);
         } else {
             // Returning user, get from local storage
-            setCounts(parseInt(storedCounts, 10));
+            let parsedCounts = parseInt(storedCounts, 10);
+
+            // If they are TEST but had the old default 100, upgrade them to 1000
+            if (currentTier === 'TEST' && parsedCounts === 100) {
+                parsedCounts = 1000;
+                localStorage.setItem(storageKey, parsedCounts.toString());
+            }
+
+            setCounts(parsedCounts);
         }
     };
 

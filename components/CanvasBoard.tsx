@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { Pen, Eraser, Trash2, Undo, ImageIcon, Camera, X, Type, ArrowRight, MousePointer2, Move, Settings } from 'lucide-react';
+import { Pen, Eraser, Trash2, Undo, Upload, Camera, X, Type, ArrowRight, MousePointer2, Move, Settings } from 'lucide-react';
 
 interface CanvasBoardProps {
   onImageChange: (hasImage: boolean) => void;
+  isLoggedIn?: boolean;
 }
 
 export interface CanvasRef {
@@ -29,7 +30,7 @@ const ERASER_SIZES = [10, 20, 30, 50, 80];
 const PEN_SIZES = [0.5, 1, 2, 4, 6];
 const TEXT_SIZES = [20, 32, 48, 64, 80];
 
-const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, ref) => {
+const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange, isLoggedIn }, ref) => {
   const bgCanvasRef = useRef<HTMLCanvasElement>(null); // Layer 0: Background (Image/White)
   const drawCanvasRef = useRef<HTMLCanvasElement>(null); // Layer 1: Strokes
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,7 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
   const [textLevel, setTextLevel] = useState(2);
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const strokesRef = useRef<Stroke[]>([]);
@@ -1113,7 +1115,7 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
   const penCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z'%3E%3C/path%3E%3C/svg%3E") 0 24, auto`;
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-white overflow-hidden select-none touch-none"
+    <div className="relative w-full h-full flex flex-col bg-white select-none touch-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       {/* Restored Toolbar: Gap-0 (Merged) & Thin borders */}
@@ -1322,10 +1324,40 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange }, 
         </div>
       </div>
 
-      {/* Upload Buttons Removed As Per Request */}
+      {/* Upload & Camera Buttons (Logged In Only, Top Right) */}
+      {!backgroundImage && isLoggedIn && (
+        <div className="absolute top-4 right-4 flex items-center justify-end gap-1.5 z-30 pointer-events-none">
+          {/* UPLOAD Button */}
+          <div className="bg-white border border-black shadow-sm dark:bg-black dark:border-white pointer-events-auto">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 transition-colors flex items-center justify-center w-[34px] h-[34px] hover:bg-gray-100 text-black dark:text-white dark:hover:bg-gray-800"
+              title="Upload Image"
+            >
+              <Upload size={16} />
+            </button>
+          </div>
+
+          {/* CAMERA Button (태블릿/모바일 전용 표시, 데스크탑에서는 숨김) */}
+          <div className="bg-white border border-black shadow-sm dark:bg-black dark:border-white pointer-events-auto lg:hidden">
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              className="p-2 transition-colors flex items-center justify-center w-[34px] h-[34px] hover:bg-gray-100 text-black dark:text-white dark:hover:bg-gray-800"
+              title="Take Photo"
+            >
+              <Camera size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden File Inputs */}
       {
         !backgroundImage ? (
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+          <>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+            <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleImageUpload} />
+          </>
         ) : (
           <button
             onClick={handleFullClear}

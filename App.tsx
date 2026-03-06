@@ -228,15 +228,21 @@ function App() {
     const success = deductCount();
     if (!success) return; // Failsafe
 
-    generate(
-      canvasRef,
-      originalImage,
-      userPrompt,
-      resolution,
-      aspectRatio,
-      vizMode,
-      styleMode
-    );
+    // Close the right panel so the canvas expands to full width before capturing
+    setIsRightPanelOpen(false);
+
+    // Wait for the panel closing transition (300ms) to finish so the canvas layout updates
+    setTimeout(() => {
+      generate(
+        canvasRef,
+        originalImage,
+        userPrompt,
+        resolution,
+        aspectRatio,
+        vizMode,
+        styleMode
+      );
+    }, 350);
   };
 
   const handleDownload = async () => {
@@ -397,12 +403,13 @@ function App() {
             />
           )}
 
-          <div className="relative bg-white dark:bg-black flex flex-col min-w-0 h-[30vh] landscape:h-auto landscape:flex-1">
+          <div className="relative bg-white dark:bg-black flex flex-col min-w-0 h-[30vh] landscape:h-auto landscape:flex-1 z-[210]">
             <div className="w-full h-full relative">
               <div className={`w-full h-full ${activeTab === 'create' ? 'block' : 'hidden'} ${isProcessing ? 'pointer-events-none opacity-80' : ''}`}>
                 <CanvasBoard
                   ref={canvasRef}
                   onImageChange={setHasCanvasContent}
+                  isLoggedIn={!!user}
                 />
               </div>
               {activeTab === 'result' && originalImage && generatedImage && (
