@@ -13,7 +13,7 @@ const Library: React.FC<LibraryProps> = ({ items, onSelect, onDelete, onClose })
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   return (
-    <div className="absolute inset-0 z-[60] bg-bw-white dark:bg-bw-black flex flex-col">
+    <div className="absolute inset-0 z-[250] bg-bw-white dark:bg-bw-black flex flex-col">
       {/* Library Header - Removed border-b */}
       {/* Library Header - Streamlined */}
       <div className="flex items-center justify-between px-6 pt-6 shrink-0">
