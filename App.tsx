@@ -741,7 +741,7 @@ function App() {
 
           {/* Global Loading Overlay */}
           {isProcessing && (
-            <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-[100] flex flex-col items-center justify-center">
+            <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-[300] flex flex-col items-center justify-center">
               {/* 5 Bouncing Dots */}
               <div className="flex gap-4 mb-8">
                 {[0, 1, 2, 3, 4].map((i) => (
