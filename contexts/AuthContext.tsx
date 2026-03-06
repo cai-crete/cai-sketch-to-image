@@ -31,6 +31,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [counts, setCounts] = useState<number>(0);
 
+    const ADMIN_EMAILS = [
+        'dermbi@cre-te.com', 'brown@cre-te.com', 'parisking@cre-te.com',
+        'stc602@cre-te.com', 'sbin@cre-te.com', 'kimdongwook@cre-te.com',
+        'woohj@cre-te.com', 'bbyj@cre-te.com', 'hyeon@cre-te.com', 'je@cre-te.com'
+    ];
+
     // Helpers to check account tiers
     const getAccountTier = (email: string | undefined): AccountTier => {
         if (!email) return 'REGULAR';
@@ -41,15 +47,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return envVar.split(',').map(e => e.trim().toLowerCase()).includes(emailLower);
         };
 
-        if (checkEmails(import.meta.env.VITE_ADMIN_EMAILS as string)) return 'ADMIN';
+        if (ADMIN_EMAILS.includes(emailLower) || checkEmails(import.meta.env.VITE_ADMIN_EMAILS as string)) return 'ADMIN';
         if (checkEmails(import.meta.env.VITE_TEST_EMAILS as string)) return 'TEST';
 
         return 'REGULAR';
     };
 
     const tier = getAccountTier(user?.email);
-
-    const VIP_EMAILS = ['dermbi@cre-te.com', 'brown@cre-te.com', 'parisking@cre-te.com'];
 
     useEffect(() => {
         let isHandlingSession = false;
@@ -63,9 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             const currentTier = getAccountTier(currentUser.email);
-            const isVIP = currentUser.email && VIP_EMAILS.includes(currentUser.email.toLowerCase());
 
-            if (currentTier === 'ADMIN' || isVIP) {
+            if (currentTier === 'ADMIN') {
                 setUser(currentUser);
                 initializeCounts(currentUser.id, currentUser.email);
                 setLoading(false);

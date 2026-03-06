@@ -1339,7 +1339,7 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange, is
           </div>
 
           {/* CAMERA Button (태블릿/모바일 전용 표시, 데스크탑에서는 숨김) */}
-          <div className="bg-white border border-black shadow-sm dark:bg-black dark:border-white pointer-events-auto lg:hidden">
+          <div className="bg-white border border-black shadow-sm dark:bg-black dark:border-white pointer-events-auto hidden [@media(pointer:coarse)]:block">
             <button
               onClick={() => cameraInputRef.current?.click()}
               className="p-2 transition-colors flex items-center justify-center w-[34px] h-[34px] hover:bg-gray-100 text-black dark:text-white dark:hover:bg-gray-800"
