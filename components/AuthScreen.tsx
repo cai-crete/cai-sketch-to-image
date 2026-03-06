@@ -153,7 +153,7 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
             } else if (isRegisterMode && (msgText.includes('already_registered_pending') || msgText.toLowerCase().includes('already registered'))) {
                 setEmail('중복된 계정입니다.');
                 setEmailErrorBg(true);
-                setTimeout(() => { setEmail(originalEmail); setEmailErrorBg(false); }, 6000);
+                setTimeout(() => { setEmail(originalEmail); setEmailErrorBg(false); }, 2000);
             } else if (!isRegisterMode && msgText.toLowerCase().includes('invalid login credentials')) {
                 setEmailErrorBg(true);
                 setPasswordErrorBg(true);
