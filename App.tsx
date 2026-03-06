@@ -423,12 +423,12 @@ function App() {
             </div>
           </div>
           {!showLibrary && user && (
-            <div className={`w-full ${isRightPanelOpen ? 'landscape:w-[320px]' : 'landscape:w-0'} ${panelFlash ? 'bg-gray-100 dark:bg-gray-900 invert' : 'bg-bw-white dark:bg-bw-black'} flex flex-col z-[200] border-t landscape:border-t-0 ${isRightPanelOpen ? 'landscape:border-l' : ''} border-black/10 dark:border-white/10 relative flex-1 landscape:flex-none landscape:h-full transition-all duration-300`}>
+            <div className={`w-full ${isRightPanelOpen ? 'landscape:w-[320px]' : 'landscape:w-0'} ${panelFlash ? 'bg-gray-100 dark:bg-gray-900 invert' : 'bg-bw-white dark:bg-bw-black'} flex flex-col z-[220] border-t landscape:border-t-0 ${isRightPanelOpen ? 'landscape:border-l' : ''} border-black/10 dark:border-white/10 relative flex-1 landscape:flex-none landscape:h-full transition-all duration-300`}>
               {user && (
                 <button
                   onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
                   disabled={isProcessing}
-                  className={`absolute top-1/2 -translate-y-1/2 -left-8 w-8 h-16 bg-bw-white dark:bg-bw-black border border-black/10 dark:border-white/10 dark:border-l-white/10 border-r-0 flex items-center justify-center z-[210] rounded-l-md hidden landscape:flex ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
+                  className={`absolute top-1/2 -translate-y-1/2 -left-8 w-8 h-16 bg-bw-white dark:bg-bw-black border border-black/10 dark:border-white/10 dark:border-l-white/10 border-r-0 flex items-center justify-center z-[230] rounded-l-md hidden landscape:flex ${isProcessing ? 'pointer-events-none opacity-50' : ''}`}
                 >
                   {isRightPanelOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                 </button>
