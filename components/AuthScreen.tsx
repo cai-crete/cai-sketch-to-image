@@ -34,10 +34,20 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
         if (e) e.preventDefault();
         setIsLoading(true);
 
+        const rawInput = email.trim();
+        const inputLower = rawInput.toLowerCase();
+
+        const specialAccounts = [
+            ...Array.from({ length: 10 }, (_, i) => `anu${i + 1}`),
+            ...Array.from({ length: 10 }, (_, i) => `kunwon${i + 1}`)
+        ];
+        const isSpecialAccount = specialAccounts.includes(inputLower);
+        const submitEmail = isSpecialAccount ? `${inputLower}@special.cre-te.com` : rawInput;
+
         try {
             if (isRegisterMode) {
                 const { data, error } = await supabase.auth.signUp({
-                    email,
+                    email: submitEmail,
                     password,
                 });
                 if (error) throw error;
@@ -49,14 +59,27 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
                         .eq('id', data.user.id)
                         .single();
 
-                    if (profile?.is_approved) {
+                    if (profile?.is_approved || isSpecialAccount) {
                         throw new Error('already_registered_approved');
                     } else {
                         throw new Error('already_registered_pending');
                     }
                 }
 
-                // 가입 성공 시 피드백
+                if (isSpecialAccount) {
+                    // 특수 계정 자동 가입/승인 피드백
+                    setEmail('환영합니다!');
+                    setEmailSuccessBg(true);
+                    setTimeout(() => {
+                        setEmailSuccessBg(false);
+                        setEmail('');
+                        setIsRegisterMode(false);
+                        setPassword('');
+                    }, 2000);
+                    return;
+                }
+
+                // 일반 계정 가입 성공 시 피드백
                 const originalEmail = email;
                 setEmail('사용승인을 요청했습니다.');
                 setEmailSuccessBg(true);
@@ -136,7 +159,7 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
                 }
             } else {
                 const { error } = await supabase.auth.signInWithPassword({
-                    email,
+                    email: submitEmail,
                     password,
                 });
                 if (error) throw error;
@@ -227,8 +250,8 @@ export function AuthScreen({ onClose }: AuthScreenProps) {
                             <div className="flex flex-col gap-2">
                                 <label className="font-mono text-[10px] text-gray-500 uppercase tracking-widest pl-1">Email</label>
                                 <input
-                                    type="email"
-                                    placeholder="Example@email.com"
+                                    type="text"
+                                    placeholder="Example@email.com (또는 지정 아이디)"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className={`w-full h-12 px-4 rounded-xl border focus:outline-none focus:ring-1 transition-all font-mono text-sm ${emailSuccessBg ? 'bg-blue-50 border-blue-500 text-blue-500 focus:border-blue-500 focus:ring-blue-500 placeholder-blue-300'

@@ -3,7 +3,7 @@ import { supabase } from '../services/supabase';
 import { User } from '@supabase/supabase-js';
 
 // Define the shape of our context
-export type AccountTier = 'ADMIN' | 'TEST' | 'REGULAR';
+export type AccountTier = 'ADMIN' | 'TEST' | 'REGULAR' | 'CUSTOMER';
 
 interface AuthContextType {
     user: User | null;
@@ -41,6 +41,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         '3rimy@cre-te.com', 'unan@cre-te.com'
     ];
 
+    const SPECIAL_ACCOUNTS = [
+        ...Array.from({ length: 10 }, (_, i) => `anu${i + 1}@special.cre-te.com`),
+        ...Array.from({ length: 10 }, (_, i) => `kunwon${i + 1}@special.cre-te.com`)
+    ];
+
     // Helpers to check account tiers
     const getAccountTier = (email: string | undefined): AccountTier => {
         if (!email) return 'REGULAR';
@@ -53,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (ADMIN_EMAILS.includes(emailLower) || checkEmails(import.meta.env.VITE_ADMIN_EMAILS as string)) return 'ADMIN';
         if (checkEmails(import.meta.env.VITE_TEST_EMAILS as string)) return 'TEST';
+        if (SPECIAL_ACCOUNTS.includes(emailLower)) return 'CUSTOMER';
 
         return 'REGULAR';
     };
@@ -72,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const currentTier = getAccountTier(currentUser.email);
 
-            if (currentTier === 'ADMIN') {
+            if (currentTier === 'ADMIN' || currentTier === 'CUSTOMER') {
                 setUser(currentUser);
                 initializeCounts(currentUser.id, currentUser.email);
                 setLoading(false);
