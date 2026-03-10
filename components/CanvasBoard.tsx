@@ -523,15 +523,16 @@ const CanvasBoard = forwardRef<CanvasRef, CanvasBoardProps>(({ onImageChange, is
           bgCanvas.height = img.height;
           drawCanvas.width = img.width;
           drawCanvas.height = img.height;
+          baseSizeRef.current = { w: img.width, h: img.height };
           setBaseSize({ w: img.width, h: img.height });
 
           ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
           setStrokes([]);
-          setHistory([]); // Clear history as well since we are starting fresh
+          setHistory([]);
         }
 
         onImageChange(true);
-        setTransform({ x: 0, y: 0, scale: 1 }); // Reset zoom
+        setTransform({ x: 0, y: 0, scale: 1 });
       };
       img.src = src;
     }
