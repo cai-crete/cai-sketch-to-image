@@ -168,6 +168,10 @@ function App() {
     onComplete: (newItem) => {
       setOriginalImage(newItem.originalImage); // Fix: Update originalImage state for ResultViewer
       setActiveTab('result');
+      // Fix: Add a small delay so DOM unmount/mount is flushed before CSS transition triggered
+      setTimeout(() => {
+        setIsRightPanelOpen(true);
+      }, 150);
       // Save to library
       saveToLibrary(newItem).then((updatedItems) => {
         setLibraryItems(updatedItems);
@@ -746,9 +750,9 @@ function App() {
 
           {/* Global Loading Overlay */}
           {isProcessing && (
-            <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-[300] flex flex-col items-center justify-center">
+            <div className="absolute inset-0 bg-white/95 dark:bg-black/95 z-[300] flex flex-col items-center justify-center gap-8">
               {/* 5 Bouncing Dots */}
-              <div className="flex gap-4 mb-8">
+              <div className="flex gap-4">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
@@ -758,13 +762,18 @@ function App() {
                 ))}
               </div>
 
-              {/* Text: Mono, Smaller, Blinking, 10s/5s cycle */}
-              <div className="flex flex-col items-center gap-2">
+              {/* Processing Step Text */}
+              <h2 className="font-mono text-xl tracking-widest uppercase animate-blink">
+                {loadingSeconds % 15 < 10 ? processingStep : "PLEASE WAIT"}
+              </h2>
 
-                <h2 className="font-mono text-xl tracking-widest uppercase animate-blink">
-                  {loadingSeconds % 15 < 10 ? processingStep : "PLEASE WAIT"}
-                </h2>
-              </div>
+              {/* CANCEL Button */}
+              <button
+                onClick={cancel}
+                className="font-display text-lg tracking-widest px-10 py-2 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+              >
+                CANCEL
+              </button>
             </div>
           )}
         </main>

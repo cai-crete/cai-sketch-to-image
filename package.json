@@ -11,6 +11,7 @@
     "verify-key": "node verify-key.js"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
     "@google/genai": "^1.37.0",
     "@supabase/supabase-js": "^2.98.0",
     "dotenv": "^17.2.3",
