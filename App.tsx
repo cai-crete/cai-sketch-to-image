@@ -769,7 +769,10 @@ function App() {
 
               {/* CANCEL Button */}
               <button
-                onClick={cancel}
+                onClick={() => {
+                  cancel();
+                  setTimeout(() => setIsRightPanelOpen(true), 150);
+                }}
                 className="font-display text-lg tracking-widest px-10 py-2 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
               >
                 CANCEL
